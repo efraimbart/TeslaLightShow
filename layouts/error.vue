@@ -6,9 +6,10 @@
     <h1 v-else>
       {{ otherError }}
     </h1>
-    <NuxtLink to="/">
-      Home page
-    </NuxtLink>
+    Refresh the page to try again
+<!--    <NuxtLink to="/submit">-->
+<!--      Home page-->
+<!--    </NuxtLink>-->
   </v-app>
 </template>
 

@@ -3,9 +3,16 @@
 </template>
 
 <script>
+import authRedirect from '@/mixins/authRedirect'
+
 export default {
+  mixins: [authRedirect],
   layout: 'blank',
-  created () {
+  mounted () {
+    if (this.checkRedirect()) {
+      return
+    }
+
     this.$auth.loginWith('social')
   }
 }

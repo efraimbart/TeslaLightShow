@@ -1,6 +1,8 @@
 <template>
   <v-app>
     <v-app-bar
+      color="primary"
+      height="60"
       fixed
       app
     >
@@ -10,7 +12,7 @@
             <v-img src="icon.png" />
           </v-avatar>
         </a>
-        <a href="https://www.reddit.com/r/TeslaLightShow/" target="_blank" style="text-decoration: none">r/TeslaLightShow</a> Submission Form
+        <a href="https://www.reddit.com/r/TeslaLightShow/" target="_blank" style="text-decoration: none; color: whitesmoke">r/TeslaLightShow</a>
       </v-toolbar-title>
     </v-app-bar>
     <v-main>
