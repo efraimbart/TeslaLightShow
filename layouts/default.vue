@@ -3,6 +3,7 @@
     <v-app-bar
       color="primary"
       height="60"
+      hide-on-scroll
       fixed
       app
     >
