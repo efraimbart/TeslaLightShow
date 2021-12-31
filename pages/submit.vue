@@ -7,7 +7,9 @@
         lazy-validation
         @submit.prevent="submit"
       >
-        <v-card-title>Song info</v-card-title>
+        <v-card-title class="primary--text">
+          Song info
+        </v-card-title>
         <v-container>
           <v-autocomplete
             v-model="model.song"
@@ -44,13 +46,22 @@
           </v-autocomplete>
         </v-container>
         <v-divider />
-        <v-card-title>Files</v-card-title>
+        <v-card-title class="primary--text">
+          Files
+        </v-card-title>
         <v-container>
           <v-file-input
+            ref="fseq"
             v-model="model.files.fseq"
             label="FSEQ file"
             accept=".fseq"
-            :rules="[v => !!v || 'Please upload an FSEQ file.']"
+            :loading="fseq.loading"
+            :hint="fseq.loading ? 'Analyzing...' : ''"
+            :persistent-hint="fseq.loading"
+            :rules="[
+              v => !!v || 'Please upload an FSEQ file.',
+              !(fseq.validation && fseq.validation.error) || fseq.validation.error
+            ]"
             outlined
           />
           <v-file-input
@@ -62,9 +73,11 @@
           />
         </v-container>
         <v-divider />
-        <v-card-title>Demo video</v-card-title>
+        <v-card-title class="primary--text">
+          Demo video
+        </v-card-title>
         <v-container>
-          <v-radio-group v-model="model.video.option" style="margin-top: 0">
+          <v-radio-group v-model="model.video.option" class="mt-0">
             <v-radio disabled label="Upload video demo (Coming soon)" :value="1" />
             <v-expand-transition>
               <v-file-input
@@ -97,7 +110,9 @@
           </v-radio-group>
           <v-divider />
         </v-container>
-        <v-card-title>Post info</v-card-title>
+        <v-card-title class="primary--text">
+          Post info
+        </v-card-title>
         <v-container>
           <v-input>
             <template
@@ -106,6 +121,7 @@
               Connect to Reddit to post with your account
               <v-spacer />
               <v-btn
+                class="primary--text"
                 :disabled="submitting"
                 @click="connectToReddit"
               >
@@ -115,9 +131,10 @@
             <template
               v-else
             >
-              <div>Posting as <a :href="`https://www.reddit.com/u/${$auth.user.name}`">/u/{{ $auth.user.name }}</a></div>
+              <div>Posting as <a :href="`${redditDomain}/u/${$auth.user.name}`">/u/{{ $auth.user.name }}</a></div>
               <v-spacer />
               <v-btn
+                class="primary--text"
                 :disabled="submitting"
                 @click="disconnectFromReddit"
               >
@@ -125,6 +142,7 @@
               </v-btn>
             </template>
           </v-input>
+          <v-select
           <v-select
             v-model="model.postInfo.sites"
             label="Sites"
@@ -142,7 +160,9 @@
           />
         </v-container>
         <v-divider />
-        <v-card-title>Creator info</v-card-title>
+        <v-card-title class="primary--text">
+          Creator info
+        </v-card-title>
         <v-container>
           <v-text-field
             v-model="model.creatorInfo.credit"
@@ -181,7 +201,7 @@
           <template
             v-if="response.success"
           >
-            <v-card-title>
+            <v-card-title class="primary--text">
               Light Show Submitted!
             </v-card-title>
             <v-card-text>
@@ -199,6 +219,7 @@
             <v-card-actions>
               <v-spacer />
               <v-btn
+                class="primary--text"
                 text
                 @click="closeSuccessDialog"
               >
@@ -209,7 +230,7 @@
           <template
             v-else
           >
-            <v-card-title>
+            <v-card-title class="primary--text">
               Error
             </v-card-title>
             <v-card-text>
@@ -218,8 +239,82 @@
             <v-card-actions>
               <v-spacer />
               <v-btn
+                class="primary--text"
                 text
                 @click="closeErrorDialog"
+              >
+                Close
+              </v-btn>
+            </v-card-actions>
+          </template>
+        </v-card>
+      </v-dialog>
+      <v-dialog
+        v-model="fseq.dialog"
+        max-width="400"
+      >
+        <v-card>
+          <template
+            v-if="fseq.validation && !fseq.validation.error"
+          >
+            <v-card-title class="primary--text">
+              FSEQ File
+            </v-card-title>
+            <v-card-text>
+              <v-row>
+                <fseq-validation-value
+                  :value="fseq.validation.frameCount.toString()"
+                  name="Frames"
+                />
+                <fseq-validation-value
+                  :value="`${fseq.validation.stepTime} ms`"
+                  name="Step Time"
+                />
+                <fseq-validation-value
+                  :value="new Date(fseq.validation.durationSecs * 1000).toISOString().substr(14, 9)"
+                  name="Duration"
+                />
+                <fseq-validation-value
+                  :value="`${(Math.round((fseq.validation.memoryUsage * 100) * 100) / 100)}%`"
+                  name="Memory Used"
+                />
+                <fseq-validation-value
+                  :value="`${fseq.validation.commandCount} / 681`"
+                  name="Commands"
+                />
+              </v-row>
+            </v-card-text>
+            <v-card-actions>
+              <v-row class="ml-1">
+                <div>
+                  Validator courtesy of <a :href="`${redditDomain}/u/xsorifc28`" target="_blank">/u/xsorifc28</a>
+                </div>
+              </v-row>
+              <v-spacer />
+              <v-btn
+                class="primary--text"
+                text
+                @click="fseq.dialog = false"
+              >
+                Close
+              </v-btn>
+            </v-card-actions>
+          </template>
+          <template
+            v-else-if="fseq.validation"
+          >
+            <v-card-title class="primary--text">
+              Invalid FSEQ File
+            </v-card-title>
+            <v-card-text>
+              {{ fseq.validation.error }}
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn
+                class="primary--text"
+                text
+                @click="fseq.dialog = false"
               >
                 Close
               </v-btn>
@@ -234,11 +329,16 @@
 <script>
 import { serialize } from 'object-to-formdata'
 import validator from 'validator'
-import { urlValidatorOptions, sites } from '@/common/constants'
+import { Validator as fseqValidator } from '@xsor/tlsv'
+import { urlValidatorOptions, sites, redditDomain } from '@/common/constants'
+import fseqValidationValue from '@/fseqValidationValue'
 
 const randomizedSites = sites.sort(() => Math.random() - 0.5)
 
 export default {
+  components: {
+    fseqValidationValue
+  },
   data () {
     return {
       valid: false,
@@ -269,10 +369,16 @@ export default {
         loading: false,
         debounceTimerId: 0
       },
+      fseq: {
+        dialog: false,
+        validation: null,
+        loading: false
+      },
       submitting: false,
       dialog: false,
       response: {},
       sites: randomizedSites,
+      redditDomain,
       isMounted: false
     }
   },
@@ -293,6 +399,33 @@ export default {
         this.songSearch.items = results.results.trackmatches.track
         this.songSearch.loading = false
       }, 200)
+    },
+    'model.files.fseq' (file) {
+      if (file) {
+        const setResults = (validation) => {
+          this.fseq.validation = validation
+          this.fseq.dialog = true
+          this.fseq.loading = false
+          this.$refs.fseq.validate()
+        }
+
+        this.fseq.loading = true
+        const reader = new FileReader()
+
+        reader.onload = (e) => {
+          setResults(fseqValidator(e.target.result))
+        }
+
+        reader.onerror = (e) => {
+          setResults({
+            error: `Error reading file: ${e.message}`
+          })
+        }
+
+        reader.readAsArrayBuffer(file)
+      } else {
+        this.fseq.validation = null
+      }
     }
   },
   mounted () {

@@ -22,3 +22,5 @@ export const sites = [
     name: 'console.la'
   }
 ]
+
+export const redditDomain = 'https://www.reddit.com'

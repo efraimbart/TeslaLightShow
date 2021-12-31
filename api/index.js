@@ -2,7 +2,10 @@ const express = require('express')
 const Snoowrap = require('snoowrap')
 const multer = require('multer')
 const validator = require('validator')
-const { urlValidatorOptions, sites } = require('../common/constants')
+const toArrayBuffer = require('to-arraybuffer')
+const { Validator: fseqValidator } = require('@xsor/tlsv')
+
+const { urlValidatorOptions, sites, redditDomain } = require('../common/constants')
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -126,7 +129,8 @@ const validate = (files, model) => {
 
   if (
     !files['files[fseq]'] ||
-    !files['files[fseq]'] ||
+    fseqValidator(toArrayBuffer(files['files[fseq]'][0].buffer)).error ||
+    !files['files[audio]'] ||
     !model.song || // TODO: Add nested song validation.
     !model.video ||
     (JSON.parse(model.video.option) === 2 && (!model.video.link || !validator.isURL(model.video.link, urlValidatorOptions))) ||
@@ -171,7 +175,7 @@ const submitToReddit = async ({ song, video, postInfo, creatorInfo }, sitesRespo
 
   return {
     success: true,
-    redditUrl: `https://www.reddit.com${url}`
+    redditUrl: `${redditDomain}${url}`
   }
 }
 

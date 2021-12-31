@@ -1,6 +1,7 @@
 ﻿const querystring = require('querystring')
 const { Router } = require('express')
 const axios = require('axios')
+const { redditDomain } = require('../../common/constants')
 
 const router = Router()
 
@@ -10,7 +11,7 @@ router.post('/auth/access_token', async (req, res) => {
     code: req.body.code,
     redirect_uri: req.body.redirect_uri
   }
-  const response = await axios.post('https://www.reddit.com/api/v1/access_token', querystring.stringify(body), {
+  const response = await axios.post(`${redditDomain}/api/v1/access_token`, querystring.stringify(body), {
     headers: {
       Authorization: `Basic ${Buffer.from(`${req.body.client_id}:${process.env.REDDIT_SECRET}`).toString('base64')}`,
       'Content-Type': 'application/x-www-form-urlencoded',
