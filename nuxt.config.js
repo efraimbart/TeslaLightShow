@@ -64,6 +64,9 @@ export default {
       callback: '/auth',
       home: '/authComplete'
     },
+    token: {
+      global: false
+    },
     strategies: {
       social: {
         scheme: 'oauth2',
@@ -103,5 +106,4 @@ export default {
   serverMiddleware: [
     '~/api'
   ]
-
 }

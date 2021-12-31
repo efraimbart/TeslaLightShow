@@ -2,6 +2,7 @@
   <v-container style="max-width: 500px">
     <v-form
       ref="form"
+      :disabled="submitting"
       lazy-validation
       @submit="submit"
     >
@@ -99,6 +100,7 @@
             Connect to Reddit to post on your behalf
             <v-spacer />
             <v-btn
+              :disabled="submitting"
               @click="connectToReddit"
             >
               Connect
@@ -110,6 +112,7 @@
             <div>Posting as <a :href="`https://www.reddit.com/u/${$auth.user.name}`">/u/{{ $auth.user.name }}</a></div>
             <v-spacer />
             <v-btn
+              :disabled="submitting"
               @click="disconnectFromReddit"
             >
               Disconnect
@@ -122,7 +125,7 @@
           hint="Select the sites to post to."
           :items="sites"
           :single-line="!model.postInfo.sites.length"
-          :rules="[v => (v && v.length) || 'Please select one or more sites to post to.']"
+          :rules="[v => (v && !!v.length) || 'Please select one or more sites to post to.']"
           item-text="name"
           item-value="id"
           multiple
@@ -156,6 +159,7 @@
         <v-btn
           width="150"
           color="primary"
+          :loading="submitting"
           @click="submit"
         >
           Submit
@@ -259,6 +263,7 @@ export default {
         loading: false,
         debounceTimerId: 0
       },
+      submitting: false,
       dialog: false,
       response: {},
       sites: randomizedSites
@@ -316,7 +321,9 @@ export default {
       if (!this.$refs.form.validate()) {
         return
       }
+      this.submitting = true
       this.response = await this.$axios.$post('/submit', serialize(this.model))
+      this.submitting = false
       this.dialog = true
     },
     closeErrorDialog () {
