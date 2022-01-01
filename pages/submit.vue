@@ -205,9 +205,9 @@
               Light Show Submitted!
             </v-card-title>
             <v-card-text>
-              View your show on:
+              View your post on:
               <ul>
-                <li><a :href="response.redditUrl" target="_blank">Reddit</a></li>
+                <li><a :href="response.redditUrl" target="_blank">r/TeslaLightShow</a></li>
                 <li v-for="siteResponse in response.sites" :key="siteResponse.name">
                   <a v-if="siteResponse.success" :href="siteResponse.postUrl" target="_blank">{{ siteResponse.name }}</a>
                   <template v-else>
@@ -286,9 +286,9 @@
             </v-card-text>
             <v-card-actions>
               <v-row class="ml-1">
-                <div>
+                <v-list-item-subtitle>
                   Validator courtesy of <a :href="`${redditDomain}/u/xsorifc28`" target="_blank">/u/xsorifc28</a>
-                </div>
+                </v-list-item-subtitle>
               </v-row>
               <v-spacer />
               <v-btn

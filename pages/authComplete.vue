@@ -13,7 +13,7 @@ export default {
       return
     }
 
-    const routeData = this.$router.resolve('/submit')
+    const routeData = this.$router.resolve('/')
     window.opener.postMessage('connectDone', routeData.href)
     window.close()
   }

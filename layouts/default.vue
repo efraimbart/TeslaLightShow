@@ -3,8 +3,8 @@
     <v-app-bar
       color="primary"
       height="60"
+      absolute
       hide-on-scroll
-      fixed
       app
     >
       <v-toolbar-title>
@@ -21,7 +21,10 @@
         <Nuxt />
       </v-container>
     </v-main>
-    <v-footer>
+    <v-footer
+      absolute
+      app
+    >
       <v-col class="text-center">
         <a :href="`${redditDomain}/r/TeslaLightShow/`" target="_blank" style="text-decoration: none;">r/TeslaLightShow</a> • <a :href="`${redditDomain}/u/efraimbart/`" target="_blank" style="text-decoration: none;">/u/efraimbart</a>
       </v-col>
