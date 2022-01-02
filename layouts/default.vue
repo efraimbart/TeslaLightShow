@@ -4,7 +4,6 @@
       color="primary"
       height="60"
       absolute
-      hide-on-scroll
       app
     >
       <v-toolbar-title>
