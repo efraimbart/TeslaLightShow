@@ -99,8 +99,7 @@ export default {
         responseType: 'code',
         grant_type: 'authorization_code',
         accessType: 'offline',
-        scope: ['identity', 'submit'],
-        autoLogout: true
+        scope: ['identity', 'submit']
       })
     }
   },

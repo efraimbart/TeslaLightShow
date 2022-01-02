@@ -546,6 +546,10 @@ export default {
       window.open(routeData.href, 'connect', 'popup,width=1000,height=700')
     },
     disconnectFromReddit () {
+      this.$axios.$post('/auth/reddit/revoke_token', {
+        accessToken: this.$auth.strategy.token.get(),
+        refreshToken: this.$auth.strategy.refreshToken.get()
+      })
       this.$auth.reset()
     },
     upload () {
