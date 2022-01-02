@@ -13,7 +13,9 @@ export default {
       return
     }
 
-    this.$auth.loginWith('social')
+    this.$auth.loginWith(this.$device.isMobile ? 'mobileReddit' : 'reddit', {
+      params: { duration: this.$route.query.duration }
+    })
   }
 }
 </script>

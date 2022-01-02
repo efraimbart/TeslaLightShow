@@ -12,38 +12,47 @@
         </v-card-title>
         <v-container>
           <v-autocomplete
+            ref="autocomplete"
             v-model="model.song"
             label="Song"
-            :search-input.sync="songSearch.term"
-            :hide-no-data="!songSearch.term || songSearch.loading"
+            no-data-text="No songs found"
+            item-value="track"
+            :search-input.sync="songSearchTerm"
+            :hide-no-data="!songSearch.term || !songSearch.term.trim() || songSearch.loading"
             :items="songSearch.items"
             :loading="songSearch.loading"
             :rules="[v => !!v || 'Please choose a song.']"
-            no-data-text="No songs found"
+            :allow-overflow="false"
             clearable
             return-object
             no-filter
             outlined
-            @click:clear="songSearch.items = []"
+            @change="$refs.autocomplete.blur()"
+            @click:clear="songSearchClear"
+            @focus="songSearchFocus"
+            @blur="songSearchBlur"
           >
             <template #item="{ item }">
-              <v-list-item-avatar>
-                <v-img
-                  :src="item.image.find(image => image.size === 'small')['#text']"
-                />
-              </v-list-item-avatar>
-              <v-list-item-title>
-                {{ item.name }} - {{ item.artist }}
-              </v-list-item-title>
+              <song-avatar :item="item" />
+              <song-content :item="item" />
             </template>
             <template #selection="{ item }">
-              <v-flex>
-                <div style="text-overflow: ellipsis">
-                  {{ item.name }} - {{ item.artist }}
-                </div>
-              </v-flex>
+              <v-list-item v-show="!songSearch.focused">
+                <song-avatar :item="item" />
+                <song-content :item="item" />
+              </v-list-item>
             </template>
           </v-autocomplete>
+<!--          <iframe-->
+<!--            v-if="model.song"-->
+<!--            width="100%"-->
+<!--            height="52"-->
+<!--            :src="`https://odesli.co/embed/?url=${model.song.track}&theme=light`"-->
+<!--            frameborder="0"-->
+<!--            allowfullscreen-->
+<!--            sandbox="allow-same-origin allow-scripts allow-presentation allow-popups allow-popups-to-escape-sandbox"-->
+<!--            allow="clipboard-read; clipboard-write"-->
+<!--          />-->
         </v-container>
         <v-divider />
         <v-card-title class="primary--text">
@@ -118,20 +127,31 @@
             <template
               v-if="!$auth.loggedIn"
             >
-              Connect to Reddit to post with your account
-              <v-spacer />
-              <v-btn
-                class="primary--text"
-                :disabled="submitting"
-                @click="connectToReddit"
-              >
-                Connect
-              </v-btn>
+              <template class="d-flex">
+                <div class="mr-5">
+                  Connect to Reddit to post with your account
+                </div>
+                <v-checkbox
+                  v-model="model.postInfo.rememberMe"
+                  label="Remember me?"
+                  class="mt-0 mr-5"
+                  :persistent-hint="false"
+                  hide-details
+                />
+                <v-spacer />
+                <v-btn
+                  class="primary--text"
+                  :disabled="submitting"
+                  @click="connectToReddit"
+                >
+                  Connect
+                </v-btn>
+              </template>
             </template>
             <template
               v-else
             >
-              <div>Posting as <a :href="`${redditDomain}/u/${$auth.user.name}`">/u/{{ $auth.user.name }}</a></div>
+              <div>Posting as <a :href="`${domains.reddit}/u/${$auth.user.name}`">/u/{{ $auth.user.name }}</a></div>
               <v-spacer />
               <v-btn
                 class="primary--text"
@@ -142,7 +162,6 @@
               </v-btn>
             </template>
           </v-input>
-          <v-select
           <v-select
             v-model="model.postInfo.sites"
             label="Sites"
@@ -194,7 +213,7 @@
       </v-form>
       <v-dialog
         v-model="dialog"
-        max-width="300"
+        max-width="400"
         persistent
       >
         <v-card>
@@ -287,7 +306,7 @@
             <v-card-actions>
               <v-row class="ml-1">
                 <v-list-item-subtitle>
-                  Validator courtesy of <a :href="`${redditDomain}/u/xsorifc28`" target="_blank">/u/xsorifc28</a>
+                  Validator courtesy of <a :href="`${domains.reddit}/u/xsorifc28`" target="_blank">/u/xsorifc28</a>
                 </v-list-item-subtitle>
               </v-row>
               <v-spacer />
@@ -330,14 +349,19 @@
 import { serialize } from 'object-to-formdata'
 import validator from 'validator'
 import { Validator as fseqValidator } from '@xsor/tlsv'
-import { urlValidatorOptions, sites, redditDomain } from '@/common/constants'
-import fseqValidationValue from '@/fseqValidationValue'
+import Spotify from 'spotify-web-api-node'
+import { domains, sites, urlValidatorOptions } from '@/common/constants'
+import fseqValidationValue from '@/components/fseqValidationValue'
+import songAvatar from '@/components/SongAvatar'
+import songContent from '@/components/SongContent'
 
 const randomizedSites = sites.sort(() => Math.random() - 0.5)
 
 export default {
   components: {
-    fseqValidationValue
+    fseqValidationValue,
+    songAvatar,
+    songContent
   },
   data () {
     return {
@@ -356,10 +380,12 @@ export default {
         },
         postInfo: {
           connectedToReddit: this.$auth.loggedIn,
+          rememberMe: false,
           sites: randomizedSites.map(site => site.id)
         },
         creatorInfo: {
           credit: null,
+          implicitCredit: null,
           tip: null
         }
       },
@@ -367,6 +393,7 @@ export default {
         term: null,
         items: [],
         loading: false,
+        focused: false,
         debounceTimerId: 0
       },
       fseq: {
@@ -377,28 +404,68 @@ export default {
       submitting: false,
       dialog: false,
       response: {},
+      spotifyValue: {
+        instance: null,
+        accessToken: null
+      },
       sites: randomizedSites,
-      redditDomain,
+      domains,
       isMounted: false
+    }
+  },
+  async fetch () {
+    await this.fetchSpotifyAccessToken()
+  },
+  head () {
+    return {
+      title: 'Submit'
+    }
+  },
+  computed: {
+    songSearchTerm: {
+      get () {
+        return this.songSearch.term
+      },
+      set (term) {
+        this.songSearch.term = term
+        clearTimeout(this.songSearch.debounceTimerId)
+        if (!term || !term.trim()) {
+          this.songSearch.items = []
+          return
+        }
+
+        this.songSearch.loading = true
+        this.songSearch.debounceTimerId = setTimeout(async () => {
+          try {
+            const results = await this.spotify.searchTracks(term)
+            this.songSearch.items = results.body.tracks.items.map(item => ({
+              name: item.name,
+              artist: item.artists.map(artist => artist.name).join(', '),
+              image: item.album.images.reduce((prevImage, currentImage) => prevImage.height > currentImage.height ? currentImage : prevImage).url,
+              url: item.external_urls.spotify,
+              track: item.uri
+            }))
+          } catch (e) {
+            console.log(e)
+            debugger
+          }
+          this.songSearch.loading = false
+        }, 200)
+      }
+    },
+    spotify () {
+      this.ensureSpotifyInstance()
+      return this.spotifyValue.instance
     }
   },
   watch: {
     '$auth.loggedIn' (loggedIn) {
       this.model.creatorInfo.connectedToReddit = loggedIn
-    },
-    'songSearch.term' (term) {
-      clearTimeout(this.debounceTimerId)
-      if (!term) {
-        this.songSearch.items = []
-        return
+      if (loggedIn) {
+        this.model.creatorInfo.implicitCredit = this.$auth.user.name
+      } else {
+        this.model.creatorInfo.implicitCredit = null
       }
-      this.songSearch.loading = true
-      this.debounceTimerId = setTimeout(async () => {
-        const results = await this.$axios.$get(`https://ws.audioscrobbler.com/2.0/?method=track.search&track=${term}&api_key=ef3d99800b7c7f33b6853ffb9527b2a3&format=json`)
-
-        this.songSearch.items = results.results.trackmatches.track
-        this.songSearch.loading = false
-      }, 200)
     },
     'model.files.fseq' (file) {
       if (file) {
@@ -432,8 +499,35 @@ export default {
     this.isMounted = true
   },
   methods: {
+    ensureSpotifyInstance () {
+      if (!this.spotifyValue.instance) {
+        this.spotifyValue.instance = new Spotify({
+          accessToken: this.spotifyValue.accessToken
+        })
+      }
+    },
+    async fetchSpotifyAccessToken () {
+      const response = await this.$axios.$post('http://localhost:3000/auth/spotify/access_token')
+      this.spotifyValue.accessToken = response.access_token
+    },
     validateUrl (url) {
       return !url || validator.isURL(url, urlValidatorOptions) || 'Please enter a valid URL.'
+    },
+    songSearchClear () {
+      this.songSearch.items = []
+      this.songSearch.term = ''
+    },
+    songSearchFocus () {
+      this.songSearch.focused = true
+      // Hack to enable the input to keep the text the user entered
+      const oldValue = this.songSearch.term
+      this.songSearch.term = ''
+      this.$nextTick(() => {
+        this.songSearch.term = oldValue
+      })
+    },
+    songSearchBlur () {
+      this.songSearch.focused = false
     },
     connectToReddit () {
       const me = this
@@ -448,7 +542,7 @@ export default {
 
       window.addEventListener('message', message)
 
-      const routeData = this.$router.resolve('/authStart')
+      const routeData = this.$router.resolve(`/authStart?duration=${this.model.postInfo.rememberMe ? 'permanent' : 'temporary'}`)
       window.open(routeData.href, 'connect', 'popup,width=1000,height=700')
     },
     disconnectFromReddit () {
@@ -481,8 +575,10 @@ export default {
     closeSuccessDialog () {
       this.closeErrorDialog()
       this.$refs.form.reset()
-      this.model.postInfo.sites = randomizedSites.map(site => site.id)
-      this.model.video.option = 2
+      this.$nextTick(() => {
+        this.model.postInfo.sites = randomizedSites.map(site => site.id)
+        this.model.video.option = 2
+      })
     }
   }
 }

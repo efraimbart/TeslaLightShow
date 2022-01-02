@@ -1,11 +1,12 @@
 const express = require('express')
+const FormData = require('form-data')
 const Snoowrap = require('snoowrap')
 const multer = require('multer')
 const validator = require('validator')
 const toArrayBuffer = require('to-arraybuffer')
 const { Validator: fseqValidator } = require('@xsor/tlsv')
 
-const { urlValidatorOptions, sites, redditDomain } = require('../common/constants')
+const { urlValidatorOptions, sites, domains } = require('../common/constants')
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 
 const auth = require('./routes/auth')
+const axios = require('axios')
 
 app.use(auth)
 
@@ -113,6 +115,16 @@ const siteMethods = {
     return 'https://teslalight.show/'
   },
   async 'teslalightshare.io' (files, model) {
+    const formData = new FormData()
+    formData.append('fseq_file', files['files[fseq]'][0].buffer, files['files[fseq]'][0].originalname)
+    formData.append('sound_file', files['files[audio]'][0].buffer, files['files[audio]'][0].originalname)
+    formData.append('show_name', `${model.song.name} - ${model.song.artist}`)
+    formData.append('youtube_link', model.video.link)
+    formData.append('created_by', model.creatorInfo.credit || model.creatorInfo.implicitCredit)
+    formData.append('paypal_link', model.creatorInfo.tip)
+
+    const response = await axios.post(process.env.TESLALIGHTSHAREIO_ENDPOINT, formData, { maxBodyLength: 100000000 })
+
     return 'https://teslalightshare.io/'
   },
   async 'tsla.digital' (files, model) {
@@ -131,7 +143,12 @@ const validate = (files, model) => {
     !files['files[fseq]'] ||
     fseqValidator(toArrayBuffer(files['files[fseq]'][0].buffer)).error ||
     !files['files[audio]'] ||
-    !model.song || // TODO: Add nested song validation.
+    !model.song ||
+    !model.song.name ||
+    !model.song.artist ||
+    !model.song.image ||
+    !model.song.url ||
+    !model.song.track ||
     !model.video ||
     (JSON.parse(model.video.option) === 2 && (!model.video.link || !validator.isURL(model.video.link, urlValidatorOptions))) ||
     !model.postInfo ||
@@ -139,6 +156,7 @@ const validate = (files, model) => {
     !model.postInfo.sites.length ||
     !model.postInfo.sites.every(siteId => siteIds.includes(JSON.parse(siteId))) ||
     !model.creatorInfo ||
+    !(model.creatorInfo.credit || model.creatorInfo.implicitCredit) ||
     (model.creatorInfo.tip && !validator.isURL(model.creatorInfo.tip, urlValidatorOptions))
   ) {
     return {
@@ -175,7 +193,7 @@ const submitToReddit = async ({ song, video, postInfo, creatorInfo }, sitesRespo
 
   return {
     success: true,
-    redditUrl: `${redditDomain}${url}`
+    redditUrl: `${domains.reddit}${url}`
   }
 }
 
@@ -206,7 +224,7 @@ ${sitesResponse.sites
 ### Song Info:
 - Name: ${song.name}
 - Artist: ${song.artist}
-- Link: ${song.url}
+- Link: ${domains.songLink}/${song.track}
 
 ${creatorInfo.credit || creatorInfo.tip ? '### Creator Info:' : ''}
 ${creatorInfo.credit ? `- Credit: ${creatorInfo.credit}` : ''}

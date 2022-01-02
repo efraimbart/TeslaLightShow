@@ -21,11 +21,11 @@ export default {
   props: {
     value: {
       type: String,
-      default: ''
+      required: true
     },
     name: {
       type: String,
-      default: ''
+      required: true
     }
   }
 }

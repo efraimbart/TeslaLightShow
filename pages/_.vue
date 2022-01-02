@@ -4,7 +4,7 @@
 
 <script>
 export default {
-  name: '404Redirect',
+  name: 'Four04Redirect',
   asyncData ({ redirect }) {
     return redirect('/submit')
   }

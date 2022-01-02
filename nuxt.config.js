@@ -1,8 +1,24 @@
+const reddit = (reddit) => {
+  const mobileReddit = {
+    ...reddit
+  }
+  mobileReddit.endpoints = { ...reddit.endpoints }
+  mobileReddit.endpoints.authorization = reddit.endpoints.mobileAuthorization
+
+  delete reddit.endpoints.mobileAuthorization
+  delete mobileReddit.endpoints.mobileAuthorization
+
+  return {
+    reddit,
+    mobileReddit
+  }
+}
+
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    titleTemplate: '%s - TeslaLightShow',
-    title: 'TeslaLightShow',
+    titleTemplate: '%s - r/TeslaLightShow',
+    title: 'r/TeslaLightShow',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -30,7 +46,8 @@ export default {
     // https://go.nuxtjs.dev/typescript
     '@nuxt/typescript-build',
     // https://go.nuxtjs.dev/vuetify
-    '@nuxtjs/vuetify'
+    '@nuxtjs/vuetify',
+    '@nuxtjs/device'
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
@@ -69,11 +86,12 @@ export default {
       global: false
     },
     strategies: {
-      social: {
+      ...reddit({
         scheme: 'oauth2',
         endpoints: {
           authorization: 'https://www.reddit.com/api/v1/authorize',
-          token: 'auth/access_token',
+          mobileAuthorization: 'https://www.reddit.com/api/v1/authorize.compact',
+          token: 'auth/reddit/access_token',
           // logout: 'https://www.reddit.com/api/v1/revoke_token',
           userInfo: 'https://oauth.reddit.com/api/v1/me'
         },
@@ -83,7 +101,7 @@ export default {
         accessType: 'offline',
         scope: ['identity', 'submit'],
         autoLogout: true
-      }
+      })
     }
   },
 

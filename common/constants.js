@@ -23,4 +23,7 @@ export const sites = [
   }
 ]
 
-export const redditDomain = 'https://www.reddit.com'
+export const domains = {
+  reddit: 'https://www.reddit.com',
+  songLink: 'https://song.link'
+}
