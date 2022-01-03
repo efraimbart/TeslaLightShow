@@ -460,7 +460,7 @@ export default {
   },
   watch: {
     '$auth.loggedIn' (loggedIn) {
-      this.model.creatorInfo.connectedToReddit = loggedIn
+      this.model.postInfo.connectedToReddit = loggedIn
       if (loggedIn) {
         this.model.creatorInfo.implicitCredit = this.$auth.user.name
       } else {
