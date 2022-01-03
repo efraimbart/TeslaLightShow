@@ -186,7 +186,7 @@
           <v-text-field
             v-model="model.creatorInfo.credit"
             :label="`Credit${model.postInfo.connectedToReddit ? ' (Optional)' : ''}`"
-            :rules="[v => (!!v && !model.postInfo.connectedToReddit) || 'Credit is required if not connected to Reddit.']"
+            :rules="[v => (!!v || model.postInfo.connectedToReddit) || 'Credit is required if not connected to Reddit.']"
             hint="Name, username, or link to credit."
             persistent-hint
             outlined
