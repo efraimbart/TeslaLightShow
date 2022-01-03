@@ -213,7 +213,7 @@
       </v-form>
       <v-dialog
         v-model="dialog"
-        max-width="400"
+        max-width="300"
         persistent
       >
         <v-card>

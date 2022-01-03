@@ -120,7 +120,7 @@ const siteMethods = {
     formData.append('sound_file', files['files[audio]'][0].buffer, files['files[audio]'][0].originalname)
     formData.append('show_name', `${model.song.name} - ${model.song.artist}`)
     formData.append('youtube_link', model.video.link)
-    formData.append('created_by', model.creatorInfo.credit || model.creatorInfo.implicitCredit)
+    formData.append('created_by', model.creatorInfo.credit || `${domains.reddit}/u/${model.creatorInfo.implicitCredit}`)
     formData.append('paypal_link', model.creatorInfo.tip)
 
     const response = await axios.post(process.env.TESLALIGHTSHAREIO_ENDPOINT, formData, { maxBodyLength: 100000000 })
