@@ -6,6 +6,7 @@ const validator = require('validator')
 const toArrayBuffer = require('to-arraybuffer')
 const { Validator: fseqValidator } = require('@xsor/tlsv')
 
+const axios = require('axios')
 const { urlValidatorOptions, sites, domains } = require('../common/constants')
 
 const upload = multer({
@@ -21,9 +22,8 @@ app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 
 const auth = require('./routes/auth')
-const axios = require('axios')
 
-app.use(auth)
+app.use('/auth', auth)
 
 const rBot = new Snoowrap({
   userAgent: process.env.REDDIT_USERAGENT,

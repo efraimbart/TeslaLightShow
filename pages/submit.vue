@@ -507,7 +507,7 @@ export default {
       }
     },
     async fetchSpotifyAccessToken () {
-      const response = await this.$axios.$post('http://localhost:3000/auth/spotify/access_token')
+      const response = await this.$axios.$post('/auth/spotify/access_token')
       this.spotifyValue.accessToken = response.access_token
     },
     validateUrl (url) {
