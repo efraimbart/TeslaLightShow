@@ -5,7 +5,6 @@ const Spotify = require('spotify-web-api-node')
 const { domains } = require('../../common/constants')
 const { extractTokenFromAuthorization } = require('../../common/util')
 
-
 const router = Router()
 
 router.post('/reddit/access_token', async (req, res) => {

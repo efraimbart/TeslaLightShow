@@ -5,7 +5,6 @@
         ref="form"
         :disabled="submitting"
         lazy-validation
-        @change="this.isDirty = true"
         @submit.prevent="submit"
       >
         <v-card-title class="primary--text">
@@ -452,12 +451,12 @@ export default {
     }
   },
   watch: {
-    // model: {
-    //   handler () {
-    //     this.isDirty = true
-    //   },
-    //   deep: true
-    // },
+    model: {
+      handler () {
+        this.isDirty = true
+      },
+      deep: true
+    },
     '$auth.loggedIn' (loggedIn) {
       this.model.postInfo.connectedToReddit = loggedIn
       this.$refs.credit.validate()
@@ -603,7 +602,6 @@ export default {
       try {
         this.response = await this.$axios.$post('/submit', serialize(this.model))
       } catch (e) {
-        console.log(e)
         this.response.error = 'Something went wrong, please try again.'
       }
       this.submitting = false
@@ -617,7 +615,7 @@ export default {
       this.closeErrorDialog()
       this.$refs.form.reset()
       this.$nextTick(() => {
-        this.model.postInfo.sites = randomizedSites.map(site => site.id)
+        this.model.postInfo.sites = randomizedSites.filter(sites => sites.available).map(site => site.id)
         this.model.video.option = 2
       })
     }
