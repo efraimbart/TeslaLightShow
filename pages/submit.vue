@@ -1,5 +1,19 @@
 <template>
-  <v-fade-transition>
+  <v-container
+    v-if="$nuxt.$config.comingSoon"
+    fill-height
+    fluid
+  >
+    <v-row
+      align="center"
+      justify="center"
+    >
+      <h1 class="primary--text">
+        Coming Soon!
+      </h1>
+    </v-row>
+  </v-container>
+  <v-fade-transition v-else>
     <v-container v-show="isMounted" style="max-width: 500px">
       <v-form
         ref="form"
@@ -44,16 +58,6 @@
               </v-list-item>
             </template>
           </v-autocomplete>
-<!--          <iframe-->
-<!--            v-if="model.song"-->
-<!--            width="100%"-->
-<!--            height="52"-->
-<!--            :src="`https://odesli.co/embed/?url=${model.song.track}&theme=light`"-->
-<!--            frameborder="0"-->
-<!--            allowfullscreen-->
-<!--            sandbox="allow-same-origin allow-scripts allow-presentation allow-popups allow-popups-to-escape-sandbox"-->
-<!--            allow="clipboard-read; clipboard-write"-->
-<!--          />-->
         </v-container>
         <v-divider />
         <v-card-title class="primary--text">

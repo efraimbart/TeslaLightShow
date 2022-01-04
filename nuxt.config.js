@@ -123,5 +123,9 @@ export default {
 
   serverMiddleware: [
     '~/api'
-  ]
+  ],
+
+  publicRuntimeConfig: {
+    comingSoon: JSON.parse(process.env.COMING_SOON) || false
+  }
 }
