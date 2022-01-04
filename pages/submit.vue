@@ -576,6 +576,7 @@ export default {
         refreshToken: this.$auth.strategy.refreshToken.get()
       })
       this.$auth.reset()
+      this.$refs.credit.validate()
     },
     upload () {
       const data = new FormData()

@@ -3,6 +3,8 @@ const { Router } = require('express')
 const axios = require('axios')
 const Spotify = require('spotify-web-api-node')
 const { domains } = require('../../common/constants')
+const { extractTokenFromAuthorization } = require('../../common/util')
+
 
 const router = Router()
 
@@ -34,7 +36,7 @@ router.post('/reddit/revoke_token', async (req, res) => {
 
   console.log('request body: ' + JSON.stringify(req.body))
   await axios.post(`${domains.reddit}/api/v1/revoke_token`, querystring.stringify({
-    token: req.body.accessToken,
+    token: extractTokenFromAuthorization(req.body.accessToken),
     token_type_hint: 'access_token'
   }), { headers })
 

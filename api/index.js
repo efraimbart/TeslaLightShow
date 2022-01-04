@@ -8,6 +8,7 @@ const { Validator: fseqValidator } = require('@xsor/tlsv')
 
 const axios = require('axios')
 const { urlValidatorOptions, sites, domains } = require('../common/constants')
+const { extractTokenFromAuthorization } = require('../common/util')
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -205,7 +206,7 @@ const submitToReddit = async ({ song, video, postInfo, creatorInfo }, sitesRespo
 
 const getSubmissionClient = (connectedToReddit, authorization) => {
   if (connectedToReddit) {
-    const accessToken = authorization.split('Bearer ').pop()
+    const accessToken = extractTokenFromAuthorization(authorization)
 
     return new Snoowrap({
       userAgent: process.env.REDDIT_USERAGENT,
