@@ -67,6 +67,7 @@ app.post('/submit',
         redditUrl: redditResponse.redditUrl
       })
     } catch (e) {
+      console.log(e)
       res.json({
         success: false,
         error: 'Something went wrong, please try again.'
