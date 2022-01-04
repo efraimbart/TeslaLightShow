@@ -68,7 +68,6 @@ app.post('/submit',
         redditUrl: redditResponse.redditUrl
       })
     } catch (e) {
-      console.log(e)
       res.json({
         success: false,
         error: 'Something went wrong, please try again.'
@@ -171,7 +170,6 @@ const validate = (files, model) => {
 }
 
 const submitToReddit = async ({ song, video, postInfo, creatorInfo }, sitesResponse, authorization) => {
-  console.log('submit to reddit start')
   const submissionRequest = {
     title: `${song.name} - ${song.artist}`,
     url: video.link
@@ -185,16 +183,12 @@ const submitToReddit = async ({ song, video, postInfo, creatorInfo }, sitesRespo
     ? await subreddit.submitLink(submissionRequest)
     : await subreddit.submitSelfpost(submissionRequest)
 
-  console.log('initial reddit post made')
-
   submission = rBot.getSubmission(submission.name.split('_')[1])
 
   await submission
     .selectFlair({ flair_template_id: process.env.FLAIR })
     .reply(commentRequest)
     .distinguish({ sticky: true })
-
-  console.log('reddit comment made')
 
   const url = await submission.permalink
 

@@ -26,15 +26,12 @@ router.post('/reddit/access_token', async (req, res) => {
 })
 
 router.post('/reddit/revoke_token', async (req, res) => {
-  console.log('Revoke start')
-
   const headers = {
-    Authorization: `Basic ${Buffer.from(`${req.body.client_id}:${process.env.REDDIT_SECRET}`).toString('base64')}`,
+    Authorization: `Basic ${Buffer.from(`${process.env.REDDIT_CLIENT_ID}:${process.env.REDDIT_SECRET}`).toString('base64')}`,
     'Content-Type': 'application/x-www-form-urlencoded',
     'User-Agent': process.env.REDDIT_USERAGENT
   }
 
-  console.log('request body: ' + JSON.stringify(req.body))
   await axios.post(`${domains.reddit}/api/v1/revoke_token`, querystring.stringify({
     token: extractTokenFromAuthorization(req.body.accessToken),
     token_type_hint: 'access_token'
