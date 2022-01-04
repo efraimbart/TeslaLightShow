@@ -77,15 +77,13 @@ app.post('/submit',
 )
 
 const submitToSites = async (files, model) => {
-  // TODO: Validate fseq file before sending to site or site does validation?
-
   const sitesResponse = {
     success: false,
     error: 'Unable to post to any of the selected sites, please select another site or try again.',
     sites: []
   }
 
-  const submittedSites = model.postInfo.sites.map(siteId => sites.find(site => site.id === JSON.parse(siteId)))
+  const submittedSites = model.postInfo.sites.map(siteId => sites.find(site => site.id === JSON.parse(siteId))).filter(site => site.available)
   const postUrls = await Promise.allSettled(submittedSites.map(site => siteMethods[site.name](files, model)))
 
   for (let i = 0; i < submittedSites.length; i++) {
@@ -124,12 +122,33 @@ const siteMethods = {
     formData.append('created_by', model.creatorInfo.credit || `${domains.reddit}/u/${model.creatorInfo.implicitCredit}`)
     formData.append('paypal_link', model.creatorInfo.tip)
 
-    const response = await axios.post(process.env.TESLALIGHTSHAREIO_ENDPOINT, formData, { maxBodyLength: 100000000 })
+    const response = await axios.post(process.env.TESLALIGHTSHAREIO_ENDPOINT, formData, { maxBodyLength: 100000000, headers: formData.getHeaders() })
 
-    return 'https://teslalightshare.io/'
+    if (!response.data.url) {
+      throw new Error(response.data.errors)
+    }
+
+    return response.data.url
   },
   async 'tsla.digital' (files, model) {
-    return 'https://tsla.digital/'
+    const formData = new FormData()
+    formData.append('fseq', files['files[fseq]'][0].buffer, files['files[fseq]'][0].originalname)
+    formData.append('audio', files['files[audio]'][0].buffer, files['files[audio]'][0].originalname)
+    formData.append('song', `${model.song.name} - ${model.song.artist}`)
+    if (JSON.parse(model.video.option) === 2) {
+      formData.append('videoType', 'CUSTOM')
+      formData.append('videoLink', model.video.link)
+    }
+    formData.append('credit', model.creatorInfo.credit || `${domains.reddit}/u/${model.creatorInfo.implicitCredit}`)
+    formData.append('tip', model.creatorInfo.tip)
+
+    const response = await axios.post(process.env.TSLADIGITAL_ENDPOINT, formData, { maxBodyLength: 100000000, headers: formData.getHeaders() })
+
+    if (response.status !== 200) {
+      throw new Error(response.data)
+    }
+
+    return response.data
   },
   async 'console.la' (files, model) {
     return 'https://console.la/'
