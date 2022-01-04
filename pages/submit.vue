@@ -5,6 +5,7 @@
         ref="form"
         :disabled="submitting"
         lazy-validation
+        @change="this.isDirty = true"
         @submit.prevent="submit"
       >
         <v-card-title class="primary--text">
@@ -186,6 +187,7 @@
         </v-card-title>
         <v-container>
           <v-text-field
+            ref="credit"
             v-model="model.creatorInfo.credit"
             :label="`Credit${model.postInfo.connectedToReddit ? ' (Optional)' : ''}`"
             :rules="[v => (!!v || model.postInfo.connectedToReddit) || 'Credit is required if not connected to Reddit.']"
@@ -450,14 +452,15 @@ export default {
     }
   },
   watch: {
-    model: {
-      handler () {
-        this.isDirty = true
-      },
-      deep: true
-    },
+    // model: {
+    //   handler () {
+    //     this.isDirty = true
+    //   },
+    //   deep: true
+    // },
     '$auth.loggedIn' (loggedIn) {
       this.model.postInfo.connectedToReddit = loggedIn
+      this.$refs.credit.validate()
       if (loggedIn) {
         this.model.creatorInfo.implicitCredit = this.$auth.user.name
       } else {

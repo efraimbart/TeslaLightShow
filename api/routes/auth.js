@@ -32,7 +32,7 @@ router.post('/reddit/revoke_token', async (req, res) => {
     'User-Agent': process.env.REDDIT_USERAGENT
   }
 
-  console.log('request body: ' + req.body)
+  console.log('request body: ' + JSON.stringify(req.body))
   await axios.post(`${domains.reddit}/api/v1/revoke_token`, querystring.stringify({
     token: req.body.accessToken,
     token_type_hint: 'access_token'
