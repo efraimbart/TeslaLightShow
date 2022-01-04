@@ -8,7 +8,7 @@
         @submit.prevent="submit"
       >
         <v-card-title class="primary--text">
-          Song info
+          Song
         </v-card-title>
         <v-container>
           <v-autocomplete
@@ -23,6 +23,7 @@
             :loading="songSearch.loading"
             :rules="[v => !!v || 'Please choose a song.']"
             :allow-overflow="false"
+            :disabled="submitting"
             clearable
             return-object
             no-filter
@@ -83,7 +84,7 @@
         </v-container>
         <v-divider />
         <v-card-title class="primary--text">
-          Demo video
+          Video Demo
         </v-card-title>
         <v-container>
           <v-radio-group v-model="model.video.option" class="mt-0">
@@ -120,7 +121,7 @@
           <v-divider />
         </v-container>
         <v-card-title class="primary--text">
-          Post info
+          Post
         </v-card-title>
         <v-container>
           <v-input>
@@ -169,7 +170,8 @@
             :items="sites"
             :single-line="!model.postInfo.sites.length"
             :rules="[v => (v && !!v.length) || 'Please select one or more sites to post to.']"
-            item-text="name"
+            :item-text="site => `${site.name}${!site.available ? ' (Coming soon)' : ''}`"
+            :item-disabled="site => !site.available"
             item-value="id"
             multiple
             chips
@@ -180,7 +182,7 @@
         </v-container>
         <v-divider />
         <v-card-title class="primary--text">
-          Creator info
+          Creator
         </v-card-title>
         <v-container>
           <v-text-field
@@ -381,7 +383,7 @@ export default {
         postInfo: {
           connectedToReddit: this.$auth.loggedIn,
           rememberMe: false,
-          sites: randomizedSites.map(site => site.id)
+          sites: randomizedSites.filter(sites => sites.available).map(site => site.id)
         },
         creatorInfo: {
           credit: null,
@@ -410,7 +412,8 @@ export default {
       },
       sites: randomizedSites,
       domains,
-      isMounted: false
+      isMounted: false,
+      isDirty: false
     }
   },
   async fetch () {
@@ -436,19 +439,7 @@ export default {
 
         this.songSearch.loading = true
         this.songSearch.debounceTimerId = setTimeout(async () => {
-          try {
-            const results = await this.spotify.searchTracks(term)
-            this.songSearch.items = results.body.tracks.items.map(item => ({
-              name: item.name,
-              artist: item.artists.map(artist => artist.name).join(', '),
-              image: item.album.images.reduce((prevImage, currentImage) => prevImage.height > currentImage.height ? currentImage : prevImage).url,
-              url: item.external_urls.spotify,
-              track: item.uri
-            }))
-          } catch (e) {
-            console.log(e)
-            debugger
-          }
+          await this.search(term)
           this.songSearch.loading = false
         }, 200)
       }
@@ -459,6 +450,12 @@ export default {
     }
   },
   watch: {
+    model: {
+      handler () {
+        this.isDirty = true
+      },
+      deep: true
+    },
     '$auth.loggedIn' (loggedIn) {
       this.model.postInfo.connectedToReddit = loggedIn
       if (loggedIn) {
@@ -495,7 +492,11 @@ export default {
       }
     }
   },
+  beforeDestroy () {
+    window.removeEventListener('beforeunload', this.beforeWindowUnload)
+  },
   mounted () {
+    window.addEventListener('beforeunload', this.beforeWindowUnload)
     this.isMounted = true
   },
   methods: {
@@ -510,8 +511,29 @@ export default {
       const response = await this.$axios.$post('/auth/spotify/access_token')
       this.spotifyValue.accessToken = response.access_token
     },
+    async resetSpotifyInstance () {
+      await this.fetchSpotifyAccessToken()
+      this.spotifyValue.instance.setAccessToken(this.spotifyValue.accessToken)
+    },
     validateUrl (url) {
       return !url || validator.isURL(url, urlValidatorOptions) || 'Please enter a valid URL.'
+    },
+    async search (term) {
+      try {
+        const results = await this.spotify.searchTracks(term)
+        this.songSearch.items = results.body.tracks.items.map(item => ({
+          name: item.name,
+          artist: item.artists.map(artist => artist.name).join(', '),
+          image: item.album.images.reduce((prevImage, currentImage) => prevImage.height > currentImage.height ? currentImage : prevImage).url,
+          url: item.external_urls.spotify,
+          track: item.uri
+        }))
+      } catch (e) {
+        if (e.statusCode === 401) {
+          await this.resetSpotifyInstance()
+          await this.search(term)
+        }
+      }
     },
     songSearchClear () {
       this.songSearch.items = []
@@ -558,6 +580,12 @@ export default {
 
       this.$axios.$post('/upload', data)
     },
+    beforeWindowUnload (e) {
+      if (this.isDirty && !window.confirm('You have unsaved changes that will be lost, are you sure you\'d like to leave?')) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    },
     async submit () {
       if (!this.$refs.form.validate()) {
         this.$nextTick(() => {
@@ -568,7 +596,11 @@ export default {
         return
       }
       this.submitting = true
-      this.response = await this.$axios.$post('/submit', serialize(this.model))
+      try {
+        this.response = await this.$axios.$post('/submit', serialize(this.model))
+      } catch (e) {
+        this.response.error = 'Something went wrong, please try again.'
+      }
       this.submitting = false
       this.dialog = true
     },

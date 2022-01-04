@@ -7,19 +7,23 @@
 export const sites = [
   {
     id: 1,
-    name: 'teslalight.show'
+    name: 'teslalight.show',
+    available: false
   },
   {
     id: 2,
-    name: 'teslalightshare.io'
+    name: 'teslalightshare.io',
+    available: true
   },
   {
     id: 3,
-    name: 'tsla.digital'
+    name: 'tsla.digital',
+    available: true
   },
   {
     id: 4,
-    name: 'console.la'
+    name: 'console.la',
+    available: false
   }
 ]
 
