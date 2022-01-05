@@ -14,210 +14,238 @@
     </v-row>
   </v-container>
   <v-fade-transition v-else>
-    <v-container v-show="isMounted" style="max-width: 500px">
-      <v-form
-        ref="form"
-        :disabled="submitting"
-        lazy-validation
-        @submit.prevent="submit"
-      >
-        <v-card-title class="primary--text">
-          Song
-        </v-card-title>
-        <v-container>
-          <v-autocomplete
-            ref="autocomplete"
-            v-model="model.song"
-            label="Song"
-            no-data-text="No songs found"
-            item-value="track"
-            :search-input.sync="songSearchTerm"
-            :hide-no-data="!songSearch.term || !songSearch.term.trim() || songSearch.loading"
-            :items="songSearch.items"
-            :loading="songSearch.loading"
-            :rules="[v => !!v || 'Please choose a song.']"
-            :allow-overflow="false"
-            :disabled="submitting"
-            clearable
-            return-object
-            no-filter
-            outlined
-            @change="$refs.autocomplete.blur()"
-            @click:clear="songSearchClear"
-            @focus="songSearchFocus"
-            @blur="songSearchBlur"
-          >
-            <template #item="{ item }">
-              <song-avatar :item="item" />
-              <song-content :item="item" />
-            </template>
-            <template #selection="{ item }">
-              <v-list-item v-show="!songSearch.focused">
+    <v-container v-show="isMounted">
+      <v-row>
+        <v-col          style="max-width: 500px"
+        >      <v-form
+          ref="form"
+          :disabled="submitting"
+          lazy-validation
+          @submit.prevent="submit"
+        >
+          <v-card-title class="primary--text">
+            Song
+          </v-card-title>
+          <v-container>
+            <v-autocomplete
+              ref="autocomplete"
+              v-model="model.song"
+              label="Song"
+              no-data-text="No songs found"
+              item-value="track"
+              :search-input.sync="songSearchTerm"
+              :hide-no-data="!songSearch.term || !songSearch.term.trim() || songSearch.loading"
+              :items="songSearch.items"
+              :loading="songSearch.loading"
+              :rules="[v => !!v || 'Please choose a song.']"
+              :allow-overflow="false"
+              :disabled="submitting"
+              clearable
+              return-object
+              no-filter
+              outlined
+              @change="$refs.autocomplete.blur()"
+              @click:clear="songSearchClear"
+              @focus="songSearchFocus"
+              @blur="songSearchBlur"
+            >
+              <template #item="{ item }">
                 <song-avatar :item="item" />
                 <song-content :item="item" />
-              </v-list-item>
-            </template>
-          </v-autocomplete>
-        </v-container>
-        <v-divider />
-        <v-card-title class="primary--text">
-          Files
-        </v-card-title>
-        <v-container>
-          <v-file-input
-            ref="fseq"
-            v-model="model.files.fseq"
-            label="FSEQ file"
-            accept=".fseq"
-            :loading="fseq.loading"
-            :hint="fseq.loading ? 'Analyzing...' : ''"
-            :persistent-hint="fseq.loading"
-            :rules="[
+              </template>
+              <template #selection="{ item }">
+                <v-list-item v-show="!songSearch.focused">
+                  <song-avatar :item="item" />
+                  <song-content :item="item" />
+                </v-list-item>
+              </template>
+            </v-autocomplete>
+          </v-container>
+          <v-divider />
+          <v-card-title class="primary--text">
+            Files
+          </v-card-title>
+          <v-container>
+            <v-file-input
+              ref="fseq"
+              v-model="model.files.fseq"
+              label="FSEQ file"
+              accept=".fseq"
+              :loading="fseq.loading"
+              :hint="fseq.loading ? 'Analyzing...' : ''"
+              :persistent-hint="fseq.loading"
+              :rules="[
               v => !!v || 'Please upload an FSEQ file.',
               !(fseq.validation && fseq.validation.error) || fseq.validation.error
             ]"
-            outlined
-          />
-          <v-file-input
-            v-model="model.files.audio"
-            label="Audio file"
-            accept="audio/quicktime,audio/*"
-            :rules="[v => !!v || 'Please upload an audio file.']"
-            outlined
-          />
-        </v-container>
-        <v-divider />
-        <v-card-title class="primary--text">
-          Video Demo
-        </v-card-title>
-        <v-container>
-          <v-radio-group v-model="model.video.option" class="mt-0">
-            <v-radio disabled label="Upload video demo (Coming soon)" :value="1" />
-            <v-expand-transition>
-              <v-file-input
-                v-if="model.video.option === 1"
-                v-model="videoFile"
-                label="Video demo"
-                hint="Video demo preferred. If unable, please submit an xLights demo instead."
-                accept="video/quicktime,video/*"
-                persistent-hint
-                outlined
-              />
-            </v-expand-transition>
-            <v-radio label="Link to video demo" :value="2" />
-            <v-expand-transition>
-              <v-text-field
-                v-if="model.video.option === 2"
-                v-model="model.video.link"
-                label="Video demo link"
-                hint="Video demo link preferred. If unable, please submit an xLights demo link instead."
-                :rules="[
+              outlined
+            />
+            <v-file-input
+              v-model="model.files.audio"
+              label="Audio file"
+              accept="audio/quicktime,audio/*"
+              :rules="[v => !!v || 'Please upload an audio file.']"
+              outlined
+            />
+          </v-container>
+          <v-divider />
+          <v-card-title class="primary--text">
+            Video Demo
+          </v-card-title>
+          <v-container>
+            <v-radio-group v-model="model.video.option" class="mt-0">
+              <v-radio disabled label="Upload video demo (Coming soon)" :value="1" />
+              <v-expand-transition>
+                <v-file-input
+                  v-if="model.video.option === 1"
+                  v-model="videoFile"
+                  label="Video demo"
+                  hint="Video demo preferred. If unable, please submit an xLights demo instead."
+                  accept="video/quicktime,video/*"
+                  persistent-hint
+                  outlined
+                />
+              </v-expand-transition>
+              <v-radio label="Link to video demo" :value="2" />
+              <v-expand-transition>
+                <v-text-field
+                  v-if="model.video.option === 2"
+                  v-model="model.video.link"
+                  label="Video demo link"
+                  hint="Video demo link preferred. If unable, please submit an xLights demo link instead."
+                  :rules="[
                   v => !!v || 'Please enter a demo link or choose None.',
                   validateUrl
                 ]"
-                persistent-hint
-                outlined
-              />
-            </v-expand-transition>
-
-            <v-radio label="None" :value="3" />
-          </v-radio-group>
-          <v-divider />
-        </v-container>
-        <v-card-title class="primary--text">
-          Post
-        </v-card-title>
-        <v-container>
-          <v-input>
-            <template
-              v-if="!$auth.loggedIn"
-            >
-              <template class="d-flex">
-                <div class="mr-5">
-                  Connect to Reddit to post with your account
-                </div>
-                <v-checkbox
-                  v-model="model.postInfo.rememberMe"
-                  label="Remember me?"
-                  class="mt-0 mr-5"
-                  :persistent-hint="false"
-                  hide-details
+                  persistent-hint
+                  outlined
                 />
+              </v-expand-transition>
+
+              <v-radio label="None" :value="3" />
+            </v-radio-group>
+            <v-divider />
+          </v-container>
+          <v-card-title class="primary--text">
+            Post
+          </v-card-title>
+          <v-container>
+            <v-input>
+              <template
+                v-if="!$auth.loggedIn"
+              >
+                <template class="d-flex">
+                  <div class="mr-5">
+                    Connect to Reddit to post with your account
+                  </div>
+                  <v-checkbox
+                    v-model="model.postInfo.rememberMe"
+                    label="Remember me?"
+                    class="mt-0 mr-5"
+                    :persistent-hint="false"
+                    hide-details
+                  />
+                  <v-spacer />
+                  <v-btn
+                    class="primary--text"
+                    :disabled="submitting"
+                    @click="connectToReddit"
+                  >
+                    Connect
+                  </v-btn>
+                </template>
+              </template>
+              <template
+                v-else
+              >
+                <div>Posting as <a :href="`${domains.reddit}/u/${$auth.user.name}`">/u/{{ $auth.user.name }}</a></div>
                 <v-spacer />
                 <v-btn
                   class="primary--text"
                   :disabled="submitting"
-                  @click="connectToReddit"
+                  @click="disconnectFromReddit"
                 >
-                  Connect
+                  Disconnect
                 </v-btn>
               </template>
-            </template>
-            <template
-              v-else
+            </v-input>
+            <v-select
+              v-model="model.postInfo.sites"
+              label="Sites"
+              hint="Select the sites to post to."
+              :items="sites"
+              :single-line="!model.postInfo.sites.length"
+              :rules="[v => (v && !!v.length) || 'Please select one or more sites to post to.']"
+              :item-text="site => `${site.name}${!site.available ? ' (Coming soon)' : ''}`"
+              :item-disabled="site => !site.available"
+              item-value="id"
+              multiple
+              chips
+              deletable-chips
+              persistent-hint
+              outlined
+            />
+          </v-container>
+          <v-divider />
+          <v-card-title class="primary--text">
+            Creator
+          </v-card-title>
+          <v-container>
+            <v-text-field
+              ref="credit"
+              v-model="model.creatorInfo.credit"
+              :label="`Credit${model.postInfo.connectedToReddit ? ' (Optional)' : ''}`"
+              :rules="[v => (!!v || model.postInfo.connectedToReddit) || 'Credit is required if not connected to Reddit.']"
+              hint="Name, username, or link to credit."
+              persistent-hint
+              outlined
+            />
+            <v-text-field
+              v-model="model.creatorInfo.tip"
+              label="Tip link (Optional)"
+              hint="Link to a somewhere the creator can be tipped for their effort."
+              :rules="[validateUrl]"
+              persistent-hint
+              outlined
+            />
+          </v-container>
+          <v-col class="text-center">
+            <v-btn
+              width="150"
+              color="primary"
+              type="submit"
+              :loading="submitting"
             >
-              <div>Posting as <a :href="`${domains.reddit}/u/${$auth.user.name}`">/u/{{ $auth.user.name }}</a></div>
-              <v-spacer />
-              <v-btn
-                class="primary--text"
-                :disabled="submitting"
-                @click="disconnectFromReddit"
-              >
-                Disconnect
-              </v-btn>
-            </template>
-          </v-input>
-          <v-select
-            v-model="model.postInfo.sites"
-            label="Sites"
-            hint="Select the sites to post to."
-            :items="sites"
-            :single-line="!model.postInfo.sites.length"
-            :rules="[v => (v && !!v.length) || 'Please select one or more sites to post to.']"
-            :item-text="site => `${site.name}${!site.available ? ' (Coming soon)' : ''}`"
-            :item-disabled="site => !site.available"
-            item-value="id"
-            multiple
-            chips
-            deletable-chips
-            persistent-hint
-            outlined
-          />
-        </v-container>
-        <v-divider />
-        <v-card-title class="primary--text">
-          Creator
-        </v-card-title>
-        <v-container>
-          <v-text-field
-            ref="credit"
-            v-model="model.creatorInfo.credit"
-            :label="`Credit${model.postInfo.connectedToReddit ? ' (Optional)' : ''}`"
-            :rules="[v => (!!v || model.postInfo.connectedToReddit) || 'Credit is required if not connected to Reddit.']"
-            hint="Name, username, or link to credit."
-            persistent-hint
-            outlined
-          />
-          <v-text-field
-            v-model="model.creatorInfo.tip"
-            label="Tip link (Optional)"
-            hint="Link to a somewhere the creator can be tipped for their effort."
-            :rules="[validateUrl]"
-            persistent-hint
-            outlined
-          />
-        </v-container>
-        <v-col class="text-center">
-          <v-btn
-            width="150"
-            color="primary"
-            type="submit"
-            :loading="submitting"
-          >
-            Submit
-          </v-btn>
+              Submit
+            </v-btn>
+          </v-col>
+        </v-form>
         </v-col>
-      </v-form>
+        <v-divider vertical />
+        <v-col           style="max-width: 500px"
+        ><rss-widget feed="https://api.rss2json.com/v1/api.json?rss_url=https://www.reddit.com/r/teslalightshow/new/.rss">
+          <template #feed_header="{ }">
+            <div />
+          </template>
+          <template #feed_body="{ items }">
+            <v-list>
+              <v-list-item v-for="(item, i) in items" :key="i">
+                <v-card width="600">
+                  <iframe id="reddit-embed" :src="`${item.link.replace('reddit.com', 'redditmedia.com')}?ref_source=embed&amp;ref=share&amp;embed=true`" sandbox="allow-scripts allow-same-origin allow-popups allow-presentation" style="border: none;" height="1000" width="500" scrolling="no"></iframe>
+                </v-card>
+
+                <!--              <v-card width="100%">-->
+                <!--                <v-img v-if="item.thumbnail" :src="decodeHtml(item.thumbnail)" />-->
+                <!--                <v-card-title>{{ item.title }}</v-card-title>-->
+                <!--                <v-card-text v-if="!item.thumbnail" v-html="item.content"></v-card-text>-->
+                <!--              </v-card>-->
+              </v-list-item>
+            </v-list>
+          </template>
+
+        </rss-widget></v-col>
+      </v-row>
+
       <v-dialog
         v-model="dialog"
         max-width="300"
@@ -357,6 +385,7 @@ import { serialize } from 'object-to-formdata'
 import validator from 'validator'
 import { Validator as fseqValidator } from '@xsor/tlsv'
 import Spotify from 'spotify-web-api-node'
+import RssWidget from 'vue-rss-widget'
 import { domains, sites, urlValidatorOptions } from '@/common/constants'
 import fseqValidationValue from '@/components/fseqValidationValue'
 import songAvatar from '@/components/SongAvatar'
@@ -368,7 +397,8 @@ export default {
   components: {
     fseqValidationValue,
     songAvatar,
-    songContent
+    songContent,
+    RssWidget
   },
   data () {
     return {
@@ -506,6 +536,10 @@ export default {
     this.isMounted = true
   },
   methods: {
+    decodeHtml (uri) {
+      const doc = new DOMParser().parseFromString(uri, 'text/html')
+      return doc.documentElement.textContent
+    },
     ensureSpotifyInstance () {
       if (!this.spotifyValue.instance) {
         this.spotifyValue.instance = new Spotify({
