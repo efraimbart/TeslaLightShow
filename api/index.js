@@ -117,7 +117,7 @@ const siteMethods = {
     const formData = new FormData()
     formData.append('fseq_file', files['files[fseq]'][0].buffer, files['files[fseq]'][0].originalname)
     formData.append('sound_file', files['files[audio]'][0].buffer, files['files[audio]'][0].originalname)
-    formData.append('show_name', `${model.song.name} - ${model.song.artist}`)
+    formData.append('show_name', `${model.song.values.name} - ${model.song.values.artist}`)
     formData.append('youtube_link', model.video.link)
     formData.append('created_by', model.creatorInfo.credit || `${domains.reddit}/u/${model.creatorInfo.implicitCredit}`)
     formData.append('paypal_link', model.creatorInfo.tip)
@@ -134,7 +134,7 @@ const siteMethods = {
     const formData = new FormData()
     formData.append('fseq', files['files[fseq]'][0].buffer, files['files[fseq]'][0].originalname)
     formData.append('audio', files['files[audio]'][0].buffer, files['files[audio]'][0].originalname)
-    formData.append('song', `${model.song.name} - ${model.song.artist}`)
+    formData.append('song', `${model.song.values.name} - ${model.song.values.artist}`)
     if (JSON.parse(model.video.option) === 2) {
       formData.append('videoType', 'CUSTOM')
       formData.append('videoLink', model.video.link)
@@ -164,11 +164,10 @@ const validate = (files, model) => {
     fseqValidator(toArrayBuffer(files['files[fseq]'][0].buffer)).error ||
     !files['files[audio]'] ||
     !model.song ||
-    !model.song.name ||
-    !model.song.artist ||
-    !model.song.image ||
-    !model.song.url ||
-    !model.song.track ||
+    !model.song.values ||
+    !model.song.values.name ||
+    !model.song.values.artist ||
+    (model.song.values.url && !validator.isURL(model.song.values.url, urlValidatorOptions)) ||
     !model.video ||
     (JSON.parse(model.video.option) === 2 && (!model.video.link || !validator.isURL(model.video.link, urlValidatorOptions))) ||
     !model.postInfo ||
@@ -190,7 +189,7 @@ const validate = (files, model) => {
 
 const submitToReddit = async ({ song, video, postInfo, creatorInfo }, sitesResponse, authorization) => {
   const submissionRequest = {
-    title: `${song.name} - ${song.artist}`,
+    title: `${song.values.name} - ${song.values.artist}`,
     url: video.link
   }
   const commentRequest = createCommentRequest(song, creatorInfo, sitesResponse)
@@ -242,9 +241,12 @@ ${sitesResponse.sites
     )}
 
 ### Song Info:
-- Name: ${song.name}
-- Artist: ${song.artist}
-- Link: ${domains.songLink}/${song.track}
+- Name: ${song.values.name}
+- Artist: ${song.values.artist}${
+    song.values.track || song.values.url
+      ? `
+- Link: ${song.values.track ? `${domains.songLink}/${song.values.track}` : song.values.url}`
+      : ''}
 
 ${creatorInfo.credit || creatorInfo.tip ? '### Creator Info:' : ''}
 ${creatorInfo.credit ? `- Credit: ${creatorInfo.credit}` : ''}

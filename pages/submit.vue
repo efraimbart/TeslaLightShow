@@ -25,39 +25,82 @@
           Song
         </v-card-title>
         <v-container>
-          <v-autocomplete
-            ref="autocomplete"
-            v-model="model.song"
-            label="Song"
-            no-data-text="No songs found"
-            item-value="track"
-            :search-input.sync="songSearchTerm"
-            :hide-no-data="!songSearch.term || !songSearch.term.trim() || songSearch.loading"
-            :items="songSearch.items"
-            :loading="songSearch.loading"
-            :rules="[v => !!v || 'Please choose a song.']"
-            :allow-overflow="false"
-            :disabled="submitting"
-            clearable
-            return-object
-            no-filter
-            outlined
-            @change="$refs.autocomplete.blur()"
-            @click:clear="songSearchClear"
-            @focus="songSearchFocus"
-            @blur="songSearchBlur"
-          >
-            <template #item="{ item }">
-              <song-avatar :item="item" />
-              <song-content :item="item" />
-            </template>
-            <template #selection="{ item }">
-              <v-list-item v-show="!songSearch.focused">
-                <song-avatar :item="item" />
-                <song-content :item="item" />
-              </v-list-item>
-            </template>
-          </v-autocomplete>
+          <v-radio-group v-model="model.song.option" class="mt-0" hide-details>
+            <v-radio
+              label="Search"
+              :value="1"
+            />
+            <v-expand-transition>
+              <v-autocomplete
+                v-if="model.song.option === 1"
+                ref="autocomplete"
+                v-model="model.song.values"
+                label="Song"
+                no-data-text="No songs found"
+                item-value="track"
+                :search-input.sync="songSearchTerm"
+                :hide-no-data="!songSearch.term || !songSearch.term.trim() || songSearch.loading"
+                :items="songSearch.items"
+                :loading="songSearch.loading"
+                :rules="[v => !!v || 'Please choose a song.']"
+                :allow-overflow="false"
+                :disabled="submitting"
+                clearable
+                return-object
+                no-filter
+                outlined
+                @change="$refs.autocomplete.blur()"
+                @click:clear="songSearchClear"
+                @focus="songSearchFocus"
+                @blur="songSearchBlur"
+              >
+                <template #item="{ item }">
+                  <song-avatar :item="item" />
+                  <song-content :item="item" />
+                </template>
+                <template #selection="{ item }">
+                  <v-list-item v-show="!songSearch.focused">
+                    <song-avatar :item="item" />
+                    <song-content :item="item" />
+                  </v-list-item>
+                </template>
+              </v-autocomplete>
+            </v-expand-transition>
+            <v-radio
+              label="Enter manually"
+              :value="2"
+            />
+            <v-expand-transition>
+              <template v-if="model.song.option === 2">
+                <div>
+                  <v-row>
+                    <v-col>
+                      <v-text-field
+                        v-model="model.song.values.name"
+                        label="Name"
+                        :rules="[v => !!v || 'Please enter a song name.']"
+                        outlined
+                      />
+                    </v-col>
+                    <v-col>
+                      <v-text-field
+                        v-model="model.song.values.artist"
+                        label="Artist"
+                        :rules="[v => !!v || 'Please enter an artist.']"
+                        outlined
+                      />
+                    </v-col>
+                  </v-row>
+                  <v-text-field
+                    v-model="model.song.values.url"
+                    label="Link (Optional)"
+                    :rules="[validateUrl]"
+                    outlined
+                  />
+                </div>
+              </template>
+            </v-expand-transition>
+          </v-radio-group>
         </v-container>
         <v-divider />
         <v-card-title class="primary--text">
@@ -91,7 +134,7 @@
           Video Demo
         </v-card-title>
         <v-container>
-          <v-radio-group v-model="model.video.option" class="mt-0">
+          <v-radio-group v-model="model.video.option" class="mt-0" hide-details>
             <v-radio disabled label="Upload video demo (Coming soon)" :value="1" />
             <v-expand-transition>
               <v-file-input
@@ -119,7 +162,6 @@
                 outlined
               />
             </v-expand-transition>
-
             <v-radio label="None" :value="3" />
           </v-radio-group>
           <v-divider />
@@ -375,7 +417,10 @@ export default {
       valid: false,
       videoFile: null,
       model: {
-        song: null,
+        song: {
+          option: 1,
+          values: null
+        },
         files: {
           fseq: null,
           audio: null
@@ -468,6 +513,18 @@ export default {
         this.model.creatorInfo.implicitCredit = this.$auth.user.name
       } else {
         this.model.creatorInfo.implicitCredit = null
+      }
+    },
+    'model.song.option' (option, oldOption) {
+      if (option !== oldOption) {
+        const oldValues = this.model.song.oldValues
+        this.model.song.oldValues = this.model.song.values
+        if (option === 1) {
+          this.model.song.values = /* TODO: Search input is cleared on hide oldValues || */ null
+        }
+        if (option === 2) {
+          this.model.song.values = oldValues || {}
+        }
       }
     },
     'model.files.fseq' (file) {
@@ -621,6 +678,9 @@ export default {
       this.$nextTick(() => {
         this.model.postInfo.sites = randomizedSites.filter(sites => sites.available).map(site => site.id)
         this.model.video.option = 2
+        this.model.song.values = null
+        this.model.song.oldValues = null
+        this.model.song.option = 1
       })
     }
   }
