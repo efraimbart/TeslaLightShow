@@ -164,8 +164,8 @@
             </v-expand-transition>
             <v-radio label="None" :value="3" />
           </v-radio-group>
-          <v-divider />
         </v-container>
+        <v-divider />
         <v-card-title class="primary--text">
           Post
         </v-card-title>
