@@ -98,7 +98,7 @@ const submitToSites = async (files, model) => {
     ...submittedSite,
     ...sites.find(site => site.id === JSON.parse(submittedSite.id))
   }))
-  const uploadSites = submittedSites.filter(site => (!site.url || JSON.parse(model.postInfo.option) === 1) && site.upload && site.available)
+  const uploadSites = submittedSites.filter(site => (!site.url || JSON.parse(model.postInfo.option) === 1) && JSON.parse(site.upload) && site.available)
   const urlSites = submittedSites.filter(site => site.url)
 
   if (JSON.parse(model.postInfo.option) === 1 || JSON.parse(model.postInfo.option) === 3) {
@@ -211,7 +211,7 @@ const validate = (files, model) => {
     !model.postInfo.sites ||
     !model.postInfo.sites.length ||
     !model.postInfo.sites.some(site =>
-      ([1, 3].includes(JSON.parse(model.postInfo.option)) && site.upload) ||
+      ([1, 3].includes(JSON.parse(model.postInfo.option)) && JSON.parse(site.upload)) ||
       ([2, 3].includes(JSON.parse(model.postInfo.option)) && site.url)) ||
     !model.postInfo.sites.every(site => siteIds.includes(JSON.parse(site.id))) ||
     !model.creatorInfo ||
