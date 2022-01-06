@@ -4,11 +4,12 @@ const Snoowrap = require('snoowrap')
 const multer = require('multer')
 const validator = require('validator')
 const toArrayBuffer = require('to-arraybuffer')
+const qs = require('qs')
 const { Validator: fseqValidator } = require('@xsor/tlsv')
 
 const axios = require('axios')
 const { urlValidatorOptions, sites, domains } = require('../common/constants')
-const { extractTokenFromAuthorization } = require('../common/util')
+const { extractTokenFromAuthorization, replaceIndexlessArrays } = require('../common/util')
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -44,19 +45,29 @@ app.post('/submit',
     try {
       const authorization = req.header('Authorization')
 
-      const validation = validate(req.files, req.body)
+      const bodyString = replaceIndexlessArrays((qs.stringify(req.body, {
+        arrayFormat: 'repeat',
+        encode: false
+      })))
+      const body = qs.parse(bodyString, {
+        allowPrototypes: true,
+        arrayLimit: 10,
+        depth: Infinity
+      })
+
+      const validation = validate(req.files, body)
       if (!validation.success) {
         res.json(validation)
         return
       }
 
-      const sitesResponse = await submitToSites(req.files, req.body)
+      const sitesResponse = await submitToSites(req.files, body)
       if (!sitesResponse.success) {
         res.json(sitesResponse)
         return
       }
 
-      const redditResponse = await submitToReddit(req.body, sitesResponse, authorization)
+      const redditResponse = await submitToReddit(body, sitesResponse, authorization)
       if (!redditResponse.success) {
         res.json(redditResponse)
         return
@@ -83,27 +94,48 @@ const submitToSites = async (files, model) => {
     sites: []
   }
 
-  const submittedSites = model.postInfo.sites.map(siteId => sites.find(site => site.id === JSON.parse(siteId))).filter(site => site.available)
-  const postUrls = await Promise.allSettled(submittedSites.map(site => siteMethods[site.name](files, model)))
+  const submittedSites = model.postInfo.sites.map(submittedSite => ({
+    ...submittedSite,
+    ...sites.find(site => site.id === JSON.parse(submittedSite.id))
+  }))
+  const uploadSites = submittedSites.filter(site => (!site.url || JSON.parse(model.postInfo.option) === 1) && site.upload && site.available)
+  const urlSites = submittedSites.filter(site => site.url)
 
-  for (let i = 0; i < submittedSites.length; i++) {
-    const site = submittedSites[i]
-    const postUrl = postUrls[i]
-    if (postUrl.status === 'fulfilled' && postUrl.value) {
+  if (JSON.parse(model.postInfo.option) === 1 || JSON.parse(model.postInfo.option) === 3) {
+    const postUrls = await Promise.allSettled(uploadSites.map(site => siteMethods[site.name](files, model)))
+
+    for (let i = 0; i < uploadSites.length; i++) {
+      const site = uploadSites[i]
+      const postUrl = postUrls[i]
+      if (postUrl.status === 'fulfilled' && postUrl.value) {
+        sitesResponse.success = true
+        delete sitesResponse.error
+        sitesResponse.sites.push({
+          success: true,
+          name: site.name,
+          postUrl: postUrl.value
+        })
+      } else {
+        sitesResponse.sites.push({
+          success: false,
+          name: site.name,
+          error: 'Error posting to this site.'
+        })
+      }
+    }
+  }
+
+  if (JSON.parse(model.postInfo.option) === 2 || JSON.parse(model.postInfo.option) === 3) {
+    urlSites.forEach((site) => {
       sitesResponse.success = true
       delete sitesResponse.error
       sitesResponse.sites.push({
         success: true,
         name: site.name,
-        postUrl: postUrl.value
-      })
-    } else {
-      sitesResponse.sites.push({
-        success: false,
-        name: site.name,
-        error: 'Error posting to this site.'
+        postUrl: site.url
       })
     }
+    )
   }
 
   return sitesResponse
@@ -160,9 +192,14 @@ const validate = (files, model) => {
   const siteIds = sites.map(site => site.id)
 
   if (
-    !files['files[fseq]'] ||
-    fseqValidator(toArrayBuffer(files['files[fseq]'][0].buffer)).error ||
-    !files['files[audio]'] ||
+    (
+      [1, 3].includes(JSON.parse(model.postInfo.option)) &&
+      (
+        !files['files[fseq]'] ||
+        fseqValidator(toArrayBuffer(files['files[fseq]'][0].buffer)).error ||
+        !files['files[audio]']
+      )
+    ) ||
     !model.song ||
     !model.song.values ||
     !model.song.values.name ||
@@ -173,7 +210,10 @@ const validate = (files, model) => {
     !model.postInfo ||
     !model.postInfo.sites ||
     !model.postInfo.sites.length ||
-    !model.postInfo.sites.every(siteId => siteIds.includes(JSON.parse(siteId))) ||
+    !model.postInfo.sites.some(site =>
+      ([1, 3].includes(JSON.parse(model.postInfo.option)) && site.upload) ||
+      ([2, 3].includes(JSON.parse(model.postInfo.option)) && site.url)) ||
+    !model.postInfo.sites.every(site => siteIds.includes(JSON.parse(site.id))) ||
     !model.creatorInfo ||
     !(model.creatorInfo.credit || model.creatorInfo.implicitCredit) ||
     (model.creatorInfo.tip && !validator.isURL(model.creatorInfo.tip, urlValidatorOptions))
@@ -250,8 +290,15 @@ ${sitesResponse.sites
 
 ${creatorInfo.credit || creatorInfo.tip ? '### Creator Info:' : ''}
 ${creatorInfo.credit ? `- Credit: ${creatorInfo.credit}` : ''}
-${creatorInfo.tip ? `- Tip link: ${creatorInfo.tip}` : ''}
-  `
+${creatorInfo.tip ? `- Tip link: ${creatorInfo.tip}` : ''}${
+    creatorInfo.comments
+      ? `
+
+### Comments:
+${creatorInfo.comments}
+`
+      : ''}
+`
 }
 
 module.exports = app

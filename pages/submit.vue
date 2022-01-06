@@ -23,13 +23,26 @@
       >
         <v-card-title class="primary--text">
           Song
+          <v-spacer />
+          <v-btn
+            width="230"
+            :color="isAdvanced ? 'primary' : ''"
+            :class="{'primary--text': !isAdvanced}"
+            :disabled="submitting"
+            @click="toggleAdvanced"
+          >
+            Toggle {{ isAdvanced ? 'Simple' : 'Advanced' }} Form
+          </v-btn>
         </v-card-title>
         <v-container>
           <v-radio-group v-model="model.song.option" class="mt-0" hide-details>
-            <v-radio
-              label="Search"
-              :value="1"
-            />
+            <v-expand-transition>
+              <v-radio
+                v-show="isAdvanced"
+                label="Search"
+                :value="1"
+              />
+            </v-expand-transition>
             <v-expand-transition>
               <v-autocomplete
                 v-if="model.song.option === 1"
@@ -66,10 +79,13 @@
                 </template>
               </v-autocomplete>
             </v-expand-transition>
-            <v-radio
-              label="Enter manually"
-              :value="2"
-            />
+              <v-expand-transition>
+                <v-radio
+                  v-show="isAdvanced"
+                  label="Enter manually"
+                  :value="2"
+                />
+              </v-expand-transition>
             <v-expand-transition>
               <template v-if="model.song.option === 2">
                 <div>
@@ -104,38 +120,13 @@
         </v-container>
         <v-divider />
         <v-card-title class="primary--text">
-          Files
-        </v-card-title>
-        <v-container>
-          <v-file-input
-            ref="fseq"
-            v-model="model.files.fseq"
-            label="FSEQ file"
-            accept=".fseq"
-            :loading="fseq.loading"
-            :hint="fseq.loading ? 'Analyzing...' : ''"
-            :persistent-hint="fseq.loading"
-            :rules="[
-              v => !!v || 'Please upload an FSEQ file.',
-              !(fseq.validation && fseq.validation.error) || fseq.validation.error
-            ]"
-            outlined
-          />
-          <v-file-input
-            v-model="model.files.audio"
-            label="Audio file"
-            accept="audio/quicktime,audio/*"
-            :rules="[v => !!v || 'Please upload an audio file.']"
-            outlined
-          />
-        </v-container>
-        <v-divider />
-        <v-card-title class="primary--text">
           Video Demo
         </v-card-title>
         <v-container>
           <v-radio-group v-model="model.video.option" class="mt-0" hide-details>
-            <v-radio disabled label="Upload video demo (Coming soon)" :value="1" />
+            <v-expand-transition>
+              <v-radio v-show="isAdvanced" disabled label="Upload video demo (Coming soon)" :value="1" />
+            </v-expand-transition>
             <v-expand-transition>
               <v-file-input
                 v-if="model.video.option === 1"
@@ -147,7 +138,9 @@
                 outlined
               />
             </v-expand-transition>
-            <v-radio label="Link to video demo" :value="2" />
+            <v-expand-transition>
+              <v-radio v-show="isAdvanced" label="Link to video demo" :value="2" />
+            </v-expand-transition>
             <v-expand-transition>
               <v-text-field
                 v-if="model.video.option === 2"
@@ -162,7 +155,9 @@
                 outlined
               />
             </v-expand-transition>
-            <v-radio label="None" :value="3" />
+            <v-expand-transition>
+              <v-radio v-show="isAdvanced" label="None" :value="3" />
+            </v-expand-transition>
           </v-radio-group>
         </v-container>
         <v-divider />
@@ -209,24 +204,74 @@
               </v-btn>
             </template>
           </v-input>
-          <v-select
-            v-model="model.postInfo.sites"
-            label="Sites"
-            hint="Select the sites to post to."
-            :items="sites"
-            :single-line="!model.postInfo.sites.length"
-            :rules="[v => (v && !!v.length) || 'Please select one or more sites to post to.']"
-            :item-text="site => `${site.name}${!site.available ? ' (Coming soon)' : ''}`"
-            :item-disabled="site => !site.available"
-            item-value="id"
-            multiple
-            chips
-            deletable-chips
-            persistent-hint
-            outlined
-          />
+          <v-radio-group v-model="model.postInfo.option" class="mt-0" hide-details>
+            <v-expand-transition>
+              <v-radio
+                v-show="isAdvanced"
+                label="Upload files and post to external sites"
+                :value="1"
+              />
+            </v-expand-transition>
+            <v-expand-transition>
+              <upload-to-sites v-if="model.postInfo.option === 1" :model="model" :sites="sites" />
+            </v-expand-transition>
+            <v-expand-transition>
+              <v-radio
+                v-show="isAdvanced"
+                label="Link to already created posts on external sites"
+                :value="2"
+              />
+            </v-expand-transition>
+            <v-expand-transition>
+              <link-to-sites v-if="model.postInfo.option === 2" :model="model" :sites="sites" />
+            </v-expand-transition>
+            <v-expand-transition>
+              <v-radio
+                v-show="isAdvanced"
+                label="Upload files and link to already created posts"
+                :value="3"
+              />
+            </v-expand-transition>
+            <v-expand-transition>
+              <div v-if="model.postInfo.option === 3">
+                <upload-to-sites :model="model" :sites="sites" allow-url />
+                <link-to-sites :model="model" :sites="sites" allow-uploads />
+              </div>
+            </v-expand-transition>
+          </v-radio-group>
         </v-container>
         <v-divider />
+        <v-expand-transition>
+          <div v-if="model.postInfo.option === 1 || model.postInfo.option === 3">
+            <v-card-title class="primary--text">
+              Files
+            </v-card-title>
+            <v-container>
+              <v-file-input
+                ref="fseq"
+                v-model="model.files.fseq"
+                label="FSEQ file"
+                accept=".fseq"
+                :loading="fseq.loading"
+                :hint="fseq.loading ? 'Analyzing...' : ''"
+                :persistent-hint="fseq.loading"
+                :rules="[
+                  v => !!v || 'Please upload an FSEQ file.',
+                  !(fseq.validation && fseq.validation.error) || fseq.validation.error
+                ]"
+                outlined
+              />
+              <v-file-input
+                v-model="model.files.audio"
+                label="Audio file"
+                accept="audio/x-wav,audio/mpeg"
+                :rules="[v => !!v || 'Please upload an audio file.']"
+                outlined
+              />
+            </v-container>
+            <v-divider />
+          </div>
+        </v-expand-transition>
         <v-card-title class="primary--text">
           Creator
         </v-card-title>
@@ -246,6 +291,11 @@
             hint="Link to a somewhere the creator can be tipped for their effort."
             :rules="[validateUrl]"
             persistent-hint
+            outlined
+          />
+          <v-textarea
+            v-model="model.creatorInfo.comments"
+            label="Comments (Optional)"
             outlined
           />
         </v-container>
@@ -400,14 +450,18 @@ import validator from 'validator'
 import { Validator as fseqValidator } from '@xsor/tlsv'
 import Spotify from 'spotify-web-api-node'
 import { domains, sites, urlValidatorOptions } from '@/common/constants'
-import fseqValidationValue from '@/components/fseqValidationValue'
+import fseqValidationValue from '@/components/FseqValidationValue'
 import songAvatar from '@/components/SongAvatar'
 import songContent from '@/components/SongContent'
+import LinkToSites from '@/components/LinkToSites'
+import UploadToSites from '@/components/UploadToSites'
 
 const randomizedSites = sites.sort(() => Math.random() - 0.5)
 
 export default {
   components: {
+    UploadToSites,
+    LinkToSites,
     fseqValidationValue,
     songAvatar,
     songContent
@@ -431,14 +485,16 @@ export default {
           link: null
         },
         postInfo: {
+          option: 1,
           connectedToReddit: this.$auth.loggedIn,
           rememberMe: false,
-          sites: randomizedSites.filter(sites => sites.available).map(site => site.id)
+          sites: randomizedSites.map(site => ({ id: site.id, url: null, upload: site.available, name: site.name }))
         },
         creatorInfo: {
           credit: null,
           implicitCredit: null,
-          tip: null
+          tip: null,
+          comments: null
         }
       },
       songSearch: {
@@ -463,7 +519,8 @@ export default {
       sites: randomizedSites,
       domains,
       isMounted: false,
-      isDirty: false
+      isDirty: false,
+      isAdvanced: false
     }
   },
   async fetch () {
@@ -581,6 +638,12 @@ export default {
     validateUrl (url) {
       return !url || validator.isURL(url, urlValidatorOptions) || 'Please enter a valid URL.'
     },
+    toggleAdvanced () {
+      this.model.song.option = 1
+      this.model.video.option = 2
+      this.model.postInfo.option = 1
+      this.isAdvanced = !this.isAdvanced
+    },
     async search (term) {
       try {
         const results = await this.spotify.searchTracks(term)
@@ -676,11 +739,12 @@ export default {
       this.closeErrorDialog()
       this.$refs.form.reset()
       this.$nextTick(() => {
-        this.model.postInfo.sites = randomizedSites.filter(sites => sites.available).map(site => site.id)
+        this.model.postInfo.sites = randomizedSites.map(site => ({ id: site.id, url: null, upload: site.available, name: site.name }))
         this.model.video.option = 2
         this.model.song.values = null
         this.model.song.oldValues = null
         this.model.song.option = 1
+        this.model.postInfo.option = 1
       })
     }
   }
