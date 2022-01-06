@@ -148,7 +148,7 @@
                 label="Video demo link"
                 hint="Video demo link preferred. If unable, please submit an xLights demo link instead."
                 :rules="[
-                  v => !!v || 'Please enter a demo link or choose None.',
+                  v => !!v || `Please enter a demo link or ${!isAdvanced ? 'toggle the advanced form and ' : ''}choose None.`,
                   validateUrl
                 ]"
                 persistent-hint
