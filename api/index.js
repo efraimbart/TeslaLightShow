@@ -55,6 +55,8 @@ app.post('/submit',
         depth: Infinity
       })
 
+      console.log(req.files, body)
+
       const validation = validate(req.files, body)
       if (!validation.success) {
         res.json(validation)
@@ -79,6 +81,7 @@ app.post('/submit',
         redditUrl: redditResponse.redditUrl
       })
     } catch (e) {
+      console.error('Error:', e)
       res.json({
         success: false,
         error: 'Something went wrong, please try again.'
