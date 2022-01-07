@@ -46,8 +46,7 @@ app.post('/submit',
       const authorization = req.header('Authorization')
 
       const bodyString = replaceIndexlessArrays((qs.stringify(req.body, {
-        arrayFormat: 'repeat',
-        encode: false
+        arrayFormat: 'repeat'
       })))
       const body = qs.parse(bodyString, {
         allowPrototypes: true,
