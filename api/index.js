@@ -234,7 +234,7 @@ const submitToReddit = async ({ song, video, postInfo, creatorInfo }, sitesRespo
   const submissionRequest = {
     title: `${song.values.name} - ${song.values.artist}`,
     url: video.link,
-    flair_id: process.env.FLAIR
+    flair_id: process.env.TEMP_FLAIR
   }
   const commentRequest = createCommentRequest(song, creatorInfo, sitesResponse)
 
