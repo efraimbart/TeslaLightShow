@@ -233,7 +233,8 @@ const validate = (files, model) => {
 const submitToReddit = async ({ song, video, postInfo, creatorInfo }, sitesResponse, authorization) => {
   const submissionRequest = {
     title: `${song.values.name} - ${song.values.artist}`,
-    url: video.link
+    url: video.link,
+    flair_id: process.env.FLAIR
   }
   const commentRequest = createCommentRequest(song, creatorInfo, sitesResponse)
 
