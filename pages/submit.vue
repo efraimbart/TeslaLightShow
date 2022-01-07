@@ -165,7 +165,7 @@
           Post
         </v-card-title>
         <v-container>
-          <v-input>
+          <v-input v-if="$route.query.showConnect">
             <template
               v-if="!$auth.loggedIn"
             >
@@ -426,6 +426,8 @@
             </v-card-title>
             <v-card-text>
               {{ fseq.validation.error }}
+              <br>
+              <div>Please contact <a :href="`${domains.reddit}/u/efraimbart/`" target="_blank" style="text-decoration: none;">/u/efraimbart</a> if you continue to receive this error.</div>
             </v-card-text>
             <v-card-actions>
               <v-spacer />
