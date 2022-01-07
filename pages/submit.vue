@@ -165,7 +165,7 @@
           Post
         </v-card-title>
         <v-container>
-          <v-input v-if="$route.query.showConnect">
+          <v-input>
             <template
               v-if="!$auth.loggedIn"
             >
