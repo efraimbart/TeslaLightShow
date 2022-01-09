@@ -74,11 +74,14 @@ app.post('/submit',
         return
       }
 
-      res.json({
+      const response = {
         success: true,
         sites: sitesResponse.sites,
         redditUrl: redditResponse.redditUrl
-      })
+      }
+
+      console.log(response)
+      res.json(response)
     } catch (e) {
       console.error('Error:', e)
       res.json({
@@ -220,6 +223,7 @@ const validate = (files, model) => {
     !(model.creatorInfo.credit || model.creatorInfo.implicitCredit) ||
     (model.creatorInfo.tip && !validator.isURL(model.creatorInfo.tip, urlValidatorOptions))
   ) {
+    console.warn('Failed validation')
     return {
       success: false,
       error: 'Please ensure that all fields are appropriately filled out.'
