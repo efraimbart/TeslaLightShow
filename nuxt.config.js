@@ -23,6 +23,8 @@ export default {
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { hid: 'description', name: 'description', content: 'The official submission form of r/TeslaLightShow' },
+      { hid: 'name', name: 'name', content: 'r/TeslaLightShow' },
+      { hid: 'image', name: 'image', content: '/hero.png' },
       { name: 'format-detection', content: 'telephone=no' }
     ],
     link: [
