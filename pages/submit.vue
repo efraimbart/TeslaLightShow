@@ -48,14 +48,14 @@
                 v-if="model.song.option === 1"
                 ref="autocomplete"
                 v-model="model.song.values"
-                label="Song"
+                label="Search for a song"
                 no-data-text="No songs found"
                 item-value="track"
                 :search-input.sync="songSearchTerm"
                 :hide-no-data="!songSearch.term || !songSearch.term.trim() || songSearch.loading"
                 :items="songSearch.items"
                 :loading="songSearch.loading"
-                :rules="[v => !!v || 'Please choose a song.']"
+                :rules="[v => !!v || `Please choose a song, or ${!isAdvanced ? 'toggle the advanced form to ' : '' }enter one manually.`]"
                 :allow-overflow="false"
                 :disabled="submitting"
                 clearable
@@ -79,13 +79,13 @@
                 </template>
               </v-autocomplete>
             </v-expand-transition>
-              <v-expand-transition>
-                <v-radio
-                  v-show="isAdvanced"
-                  label="Enter manually"
-                  :value="2"
-                />
-              </v-expand-transition>
+            <v-expand-transition>
+              <v-radio
+                v-show="isAdvanced"
+                label="Enter manually"
+                :value="2"
+              />
+            </v-expand-transition>
             <v-expand-transition>
               <template v-if="model.song.option === 2">
                 <div>
@@ -148,7 +148,7 @@
                 label="Video demo link"
                 hint="Video demo link preferred. If unable, please submit an xLights demo link instead."
                 :rules="[
-                  v => !!v || `Please enter a demo link or ${!isAdvanced ? 'toggle the advanced form and ' : ''}choose None.`,
+                  v => !!v || `Please enter a demo link, or ${!isAdvanced ? 'toggle the advanced form and ' : ''}choose &quot;None&quot;.`,
                   validateUrl
                 ]"
                 persistent-hint
@@ -213,7 +213,7 @@
               />
             </v-expand-transition>
             <v-expand-transition>
-              <upload-to-sites v-if="model.postInfo.option === 1" :model="model" :sites="sites" />
+              <upload-to-sites v-if="model.postInfo.option === 1" :model="model" :sites="sites" :is-advanced="isAdvanced" />
             </v-expand-transition>
             <v-expand-transition>
               <v-radio
@@ -234,7 +234,7 @@
             </v-expand-transition>
             <v-expand-transition>
               <div v-if="model.postInfo.option === 3">
-                <upload-to-sites :model="model" :sites="sites" allow-url />
+                <upload-to-sites :model="model" :sites="sites" :is-advanced="isAdvanced" allow-url />
                 <link-to-sites :model="model" :sites="sites" allow-uploads />
               </div>
             </v-expand-transition>

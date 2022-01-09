@@ -4,7 +4,7 @@
     label="Upload to sites"
     :items="sites"
     :single-line="!postInfoSites.length"
-    :rules="[v => (v && !!v.length) || `Please select one or more sites to post to${ allowUrl ? ', or enter one or more site post urls' : ''}.`]"
+    :rules="[v => (v && !!v.length) || `Please select one or more sites to post to${ allowUrl ? ', or enter one or more site post urls' : `, or ${!isAdvanced ? 'toggle the advanced form to ' : '' }link to already created posts` }.`]"
     :item-text="site => `${site.name}${!site.available && !model.postInfo.sites.find(modelSite => modelSite.id === site.id).url ? ' (Coming soon)' : ''}`"
     :item-disabled="site => !site.available || (allowUrl && !!model.postInfo.sites.find(modelSite => modelSite.id === site.id).url)"
     item-value="id"
@@ -29,6 +29,10 @@ export default {
     },
     sites: {
       type: Array,
+      required: true
+    },
+    isAdvanced: {
+      type: Boolean,
       required: true
     }
   },
