@@ -233,6 +233,24 @@ const validate = (files, model) => {
   return validation
 }
 
+const submitToRedditInner = async (connectedToReddit, authorization, video, submissionRequest) => {
+  const subreddit = getSubmissionClient(connectedToReddit, authorization)
+    .getSubreddit(process.env.SUBREDDIT)
+
+  try {
+    return JSON.parse(video.option) === 2
+      ? await subreddit.submitLink(submissionRequest)
+      : await subreddit.submitSelfpost(submissionRequest)
+  } catch (e) {
+    if (connectedToReddit) {
+      console.error('Trying again as disconnected:', e)
+      return await submitToRedditInner(false, undefined, video, submissionRequest)
+    } else {
+      throw e
+    }
+  }
+}
+
 const submitToReddit = async ({ song, video, postInfo, creatorInfo }, sitesResponse, authorization) => {
   const submissionRequest = {
     title: `${song.values.name} - ${song.values.artist}`,
@@ -240,13 +258,7 @@ const submitToReddit = async ({ song, video, postInfo, creatorInfo }, sitesRespo
     flair_id: process.env.TEMP_FLAIR
   }
   const commentRequest = createCommentRequest(song, creatorInfo, sitesResponse)
-
-  const subreddit = getSubmissionClient(JSON.parse(postInfo.connectedToReddit), authorization)
-    .getSubreddit(process.env.SUBREDDIT)
-
-  let submission = JSON.parse(video.option) === 2
-    ? await subreddit.submitLink(submissionRequest)
-    : await subreddit.submitSelfpost(submissionRequest)
+  let submission = await submitToRedditInner(JSON.parse(postInfo.connectedToReddit), authorization, video, submissionRequest)
 
   submission = rBot.getSubmission(submission.name.split('_')[1])
 
@@ -264,7 +276,7 @@ const submitToReddit = async ({ song, video, postInfo, creatorInfo }, sitesRespo
 }
 
 const getSubmissionClient = (connectedToReddit, authorization) => {
-  if (connectedToReddit) {
+  if (connectedToReddit && authorization) {
     const accessToken = extractTokenFromAuthorization(authorization)
 
     return new Snoowrap({
