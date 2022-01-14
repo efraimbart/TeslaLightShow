@@ -353,6 +353,31 @@
             </v-card-title>
             <v-card-text>
               {{ response.error }}
+              <br>
+              <br>
+              <div>Please contact <a :href="`${domains.reddit}/u/efraimbart/`" target="_blank" style="text-decoration: none;">/u/efraimbart</a> if you continue to receive this error.</div>
+              <v-expansion-panels
+                v-if="response.errorDetails"
+                class="mt-5"
+              >
+                <v-expansion-panel>
+                  <v-expansion-panel-header>
+                    Error details
+                  </v-expansion-panel-header>
+                  <v-expansion-panel-content>
+                    {{ response.errorDetails }}
+                    <br>
+                    <br>
+                    <v-btn
+                      width="100%"
+                      class="primary--text"
+                      @click="copyErrorDetails"
+                    >
+                      {{ copyErrorDetailsText }}
+                    </v-btn>
+                  </v-expansion-panel-content>
+                </v-expansion-panel>
+              </v-expansion-panels>
             </v-card-text>
             <v-card-actions>
               <v-spacer />
@@ -426,8 +451,6 @@
             </v-card-title>
             <v-card-text>
               {{ fseq.validation.error }}
-              <br>
-              <div>Please contact <a :href="`${domains.reddit}/u/efraimbart/`" target="_blank" style="text-decoration: none;">/u/efraimbart</a> if you continue to receive this error.</div>
             </v-card-text>
             <v-card-actions>
               <v-spacer />
@@ -522,7 +545,8 @@ export default {
       domains,
       isMounted: false,
       isDirty: false,
-      isAdvanced: false
+      isAdvanced: false,
+      copyErrorDetailsText: 'Copy'
     }
   },
   async fetch () {
@@ -646,6 +670,13 @@ export default {
       this.model.postInfo.option = 1
       this.isAdvanced = !this.isAdvanced
     },
+    copyErrorDetails () {
+      navigator.clipboard.writeText(this.response.errorDetails)
+      this.copyErrorDetailsText = 'Copied!'
+      setTimeout(() => {
+        this.copyErrorDetailsText = 'Copy'
+      }, 10000)
+    },
     async search (term) {
       try {
         const results = await this.spotify.searchTracks(term)
@@ -729,6 +760,7 @@ export default {
         this.response = await this.$axios.$post('/submit', serialize(this.model))
       } catch (e) {
         this.response.error = 'Something went wrong, please try again.'
+        this.response.errorDetails = e
       }
       this.submitting = false
       this.dialog = true
