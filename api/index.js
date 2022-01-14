@@ -121,6 +121,7 @@ const submitToSites = async (files, model) => {
           postUrl: postUrl.value
         })
       } else {
+        console.warn(postUrl)
         sitesResponse.sites.push({
           success: false,
           name: site.name,
