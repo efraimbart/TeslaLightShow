@@ -365,8 +365,9 @@
                     Error details
                   </v-expansion-panel-header>
                   <v-expansion-panel-content>
-                    {{ response.errorDetails }}
-                    <br>
+                    <div style="max-height: 100px; overflow-y: auto">
+                      {{ response.errorDetails }}
+                    </div>
                     <br>
                     <v-btn
                       width="100%"
@@ -670,8 +671,8 @@ export default {
       this.model.postInfo.option = 1
       this.isAdvanced = !this.isAdvanced
     },
-    copyErrorDetails () {
-      navigator.clipboard.writeText(this.response.errorDetails)
+    async copyErrorDetails () {
+      await navigator.clipboard.writeText(this.response.errorDetails)
       this.copyErrorDetailsText = 'Copied!'
       setTimeout(() => {
         this.copyErrorDetailsText = 'Copy'
