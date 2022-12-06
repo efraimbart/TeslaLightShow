@@ -1,3 +1,5 @@
+import { DefinePlugin } from 'webpack'
+
 const reddit = (reddit) => {
   const mobileReddit = {
     ...reddit
@@ -121,6 +123,10 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+    standalone: true,
+    extend (config) {
+      config.plugins.push(new DefinePlugin({ 'global.GENTLY': false }))
+    }
   },
 
   serverMiddleware: [
