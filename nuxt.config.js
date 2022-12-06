@@ -127,6 +127,9 @@ export default {
     '~/api'
   ],
 
+  ssr: true,
+  // target: 'static',
+
   publicRuntimeConfig: {
     comingSoon: JSON.parse(process.env.COMING_SOON) || false
   }
