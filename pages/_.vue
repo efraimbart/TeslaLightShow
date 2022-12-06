@@ -6,7 +6,7 @@
 export default {
   name: 'Four04Redirect',
   asyncData ({ redirect }) {
-    return redirect('/submit?standalone=true')
+    return redirect('/submit')
   }
 }
 </script>

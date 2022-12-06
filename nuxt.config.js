@@ -127,7 +127,7 @@ export default {
     '~/api'
   ],
 
-  ssr: true,
+  // ssr: true,
   // target: 'static',
 
   publicRuntimeConfig: {
