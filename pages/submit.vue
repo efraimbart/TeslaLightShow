@@ -1,4 +1,5 @@
 <template>
+  <div>
   <v-container
     v-if="$nuxt.$config.comingSoon"
     fill-height
@@ -468,6 +469,7 @@
       </v-dialog>
     </v-container>
   </v-fade-transition>
+  </div>
 </template>
 
 <script>
