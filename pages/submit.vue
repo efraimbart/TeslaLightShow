@@ -761,6 +761,15 @@ export default {
       this.submitting = true
       try {
         this.response = await this.$axios.$post('/submit', serialize(this.model))
+        if (!this.response.success && this.response.sites && this.response.sites.some(siteResponse => siteResponse.success)) {
+          this.model.postInfo.option = 2
+          this.response.sites
+            .filter(siteResponse => siteResponse.success)
+            .forEach((siteResponse) => {
+              const site = this.model.postInfo.sites.find(site => site.name === siteResponse.name)
+              site.url = siteResponse.postUrl
+            })
+        }
       } catch (e) {
         this.response.error = 'Something went wrong, please try again.'
         this.response.errorDetails = e

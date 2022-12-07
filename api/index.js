@@ -35,6 +35,11 @@ const rBot = new Snoowrap({
   password: process.env.REDDIT_BOT_PASSWORD
 })
 
+const errorResponse = {
+  success: false,
+  error: 'Something went wrong, please try again.'
+}
+
 // TODO: Unsafe to allow files without validation?
 app.post('/submit',
   upload.fields([
@@ -62,6 +67,7 @@ app.post('/submit',
         return
       }
 
+      // const sitesResponse = { sites: [] }
       const sitesResponse = await submitToSites(req.files, body)
       if (!sitesResponse.success) {
         res.json(sitesResponse)
@@ -70,7 +76,10 @@ app.post('/submit',
 
       const redditResponse = await submitToReddit(body, sitesResponse, authorization)
       if (!redditResponse.success) {
-        res.json(redditResponse)
+        res.json({
+          ...redditResponse,
+          sites: sitesResponse.sites
+        })
         return
       }
 
@@ -84,10 +93,7 @@ app.post('/submit',
       res.json(response)
     } catch (e) {
       console.error('Error:', e)
-      res.json({
-        success: false,
-        error: 'Something went wrong, please try again.'
-      })
+      res.json(errorResponse)
     }
   }
 )
@@ -259,20 +265,26 @@ const submitToReddit = async ({ song, video, postInfo, creatorInfo }, sitesRespo
     flair_id: process.env.TEMP_FLAIR
   }
   const commentRequest = createCommentRequest(song, creatorInfo, sitesResponse)
-  let submission = await submitToRedditInner(JSON.parse(postInfo.connectedToReddit), authorization, video, submissionRequest)
 
-  submission = rBot.getSubmission(submission.name.split('_')[1])
+  try {
+    let submission = await submitToRedditInner(JSON.parse(postInfo.connectedToReddit), authorization, video, submissionRequest)
 
-  await submission
-    .selectFlair({ flair_template_id: process.env.FLAIR })
-    .reply(commentRequest)
-    .distinguish({ sticky: true })
+    submission = rBot.getSubmission(submission.name.split('_')[1])
 
-  const url = await submission.permalink
+    await submission
+      .selectFlair({ flair_template_id: process.env.FLAIR })
+      .reply(commentRequest)
+      .distinguish({ sticky: true })
 
-  return {
-    success: true,
-    redditUrl: `${domains.reddit}${url}`
+    const url = await submission.permalink
+
+    return {
+      success: true,
+      redditUrl: `${domains.reddit}${url}`
+    }
+  } catch (e) {
+    console.error('Reddit error:', e)
+    return errorResponse
   }
 }
 
