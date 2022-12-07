@@ -134,6 +134,8 @@ export default {
   ],
 
   ssr: true,
+
+  // ssr: true,
   // target: 'static',
 
   publicRuntimeConfig: {
