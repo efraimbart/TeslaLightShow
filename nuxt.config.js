@@ -123,7 +123,6 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
-    standalone: true,
     extend (config) {
       config.plugins.push(new DefinePlugin({ 'global.GENTLY': false }))
     }
@@ -134,9 +133,6 @@ export default {
   ],
 
   ssr: true,
-
-  // ssr: true,
-  // target: 'static',
 
   publicRuntimeConfig: {
     comingSoon: JSON.parse(process.env.COMING_SOON) || false
