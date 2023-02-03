@@ -758,7 +758,7 @@ export default {
       }
       this.submitting = true
       try {
-        this.response = await this.$axios.$post('/submit', serialize(this.model))
+        this.response = await this.$axios.$post('/submitPost', serialize(this.model))
       } catch (e) {
         this.response.error = 'Something went wrong, please try again.'
         this.response.errorDetails = e

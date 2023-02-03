@@ -36,7 +36,7 @@ const rBot = new Snoowrap({
 })
 
 // TODO: Unsafe to allow files without validation?
-app.post('/submit',
+app.post('/submitPost',
   upload.fields([
     { name: 'files[fseq]', maxCount: 1 },
     { name: 'files[audio]', maxCount: 1 }
